@@ -1,15 +1,34 @@
 import { Button } from "primereact/button";
 import "primereact/resources/themes/lara-light-blue/theme.css";
 import { MuseClient, zipSamples } from "muse-js";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { bandpassFilter, epoch } from "@neurosity/pipes";
-import { catchError } from "rxjs/operators";
-import { Observable } from "rxjs";
+import { catchError, multicast } from "rxjs/operators";
+import { Observable, Subscription, Subject } from "rxjs";
 import { generateXTics } from "./chartUtils";
 
-let client: MuseClient;
+type SampleData = {
+  data: [
+    ch0: number[],
+    ch1: number[],
+    ch2: number[],
+    ch3: number[],
+    ch4: number[]
+  ];
+  info: {
+    samplingRate: number;
+    startTime: number;
+  };
+};
 
-const settings = {
+type ChartData = {
+  channels: Array<{
+    data: number[];
+    xLabels: number[];
+  }>;
+};
+
+const initialSettings = {
   name: "Intro",
   cutOffLow: 0.1,
   cutOffHigh: 100,
@@ -21,61 +40,58 @@ const settings = {
 const enableAux = false;
 const nbChannels = enableAux ? 5 : 4;
 
-async function initMuseClient() {
-  client = new MuseClient();
+function createMuseClient() {
+  const client = new MuseClient();
   client.enableAux = enableAux;
-  await client.connect();
-  await client.start();
-
-  const pipe = zipSamples(client.eegReadings).pipe(
-    // @ts-expect-error: Type mismatch between RxJS versions. Neurosity uses 7, muse-js uses 6. Our project currently uses 6
-    bandpassFilter({
-      cutoffFrequencies: [settings.cutOffLow, settings.cutOffHigh],
-      nbChannels,
-    }),
-    epoch({
-      interval: settings.interval,
-      duration: settings.duration,
-      samplingRate: settings.srate,
-    }),
-    catchError((err) => {
-      console.error(err);
-      return [];
-    })
-  ) as Observable<{
-    data: [
-      ch0: number[],
-      ch1: number[],
-      ch2: number[],
-      ch3: number[],
-      ch4: number[]
-    ];
-    info: {
-      samplingRate: number;
-      startTime: number;
-    };
-  }>;
-
-  return pipe;
-  // const multi = pipe.pipe(multicast(() => new Subject()));
+  return client;
 }
-
-type ChartData = {
-  channels: Array<{
-    data: number[];
-    xLabels: number[];
-  }>;
-};
 
 export default function App() {
   const [isConnected, setIsConnected] = useState(false);
+  const [settings, setSettings] = useState(initialSettings);
   const [data, setData] = useState<ChartData>({
     channels: [],
   });
 
-  async function connect() {
-    const pipe = await initMuseClient();
-    pipe.subscribe((data) => {
+  const client = useRef(createMuseClient());
+  const pipe = useRef<Observable<SampleData>>();
+  const subscription = useRef<Subscription>();
+
+  useEffect(() => {
+    if (subscription.current) subscription.current.unsubscribe();
+    if (!isConnected) return;
+    pipe.current = zipSamples(client.current.eegReadings).pipe(
+      // @ts-expect-error: Type mismatch between RxJS versions. Neurosity uses 7, muse-js uses 6. Our project currently uses 6
+      bandpassFilter({
+        cutoffFrequencies: [settings.cutOffLow, settings.cutOffHigh],
+        nbChannels,
+      }),
+      epoch({
+        interval: settings.interval,
+        duration: settings.duration,
+        samplingRate: settings.srate,
+      }),
+      catchError((err) => {
+        console.error(err);
+        return [];
+      })
+    ) as Observable<{
+      data: [
+        ch0: number[],
+        ch1: number[],
+        ch2: number[],
+        ch3: number[],
+        ch4: number[]
+      ];
+      info: {
+        samplingRate: number;
+        startTime: number;
+      };
+    }>;
+
+    console.log("subscribing");
+    // const multi = pipe.current.pipe(multicast(() => new Subject()));
+    subscription.current = pipe.current.subscribe((data) => {
       setData({
         channels: data.data.map((channel) => ({
           data: channel,
@@ -83,7 +99,12 @@ export default function App() {
         })),
       });
     });
+  }, [settings, isConnected]);
+
+  async function connect() {
+    await client.current.connect();
     setIsConnected(true);
+    await client.current.start();
   }
 
   useEffect(() => {
@@ -91,7 +112,7 @@ export default function App() {
   }, [data]);
 
   async function disconnect() {
-    await client.disconnect();
+    await client.current.disconnect();
     setIsConnected(false);
   }
 
