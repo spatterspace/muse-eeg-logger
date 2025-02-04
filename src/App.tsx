@@ -308,14 +308,14 @@ export default function App() {
       header.join(","),
       lines
     );
-    setTimestampData([]);
   }
 
   useEffect(() => {
     if (recordingTimestamps) {
       if (Date.now() - recordingTimestamps > settings.downloadInterval * 1000) {
+        const currentData = [...timestampData];
         printTimestamps().then(() => {
-          setTimestampData([]);
+          setTimestampData((prev) => prev.slice(currentData.length));
         });
         setRecordingTimestamps(Date.now());
       }
@@ -323,9 +323,10 @@ export default function App() {
   }, [timestampData]);
 
   function stopRecordingTimestamps() {
-    printTimestamps();
-    setTimestampData([]);
-    setRecordingTimestamps(false);
+    printTimestamps().then(() => {
+      setTimestampData([]);
+      setRecordingTimestamps(false);
+    });
   }
 
   return (
