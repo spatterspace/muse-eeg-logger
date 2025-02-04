@@ -57,6 +57,10 @@ type ChartData = {
   }>;
 };
 
+type RecordedEpochs = {
+  [timestamp: number]: ChartData;
+};
+
 const initialSettings = {
   name: "Intro",
   cutOffLow: 0.1,
@@ -64,6 +68,7 @@ const initialSettings = {
   interval: 25, // Sampling points between epochs onsets
   srate: 256, // never exposed to the end user
   duration: 512,
+  downloadInterval: 10, // Time in seconds between downloads
 };
 
 const enableAux = true;
@@ -95,13 +100,31 @@ function formatTimestamp(timestamp: number): string {
   return `${month}/${day} ${hours}:${minutes}:${seconds}.${milliseconds}`;
 }
 
+function downloadCSV(name: string, header: string, lines: string[]) {
+  const csvContent = [header, ...lines].join("\n");
+  const blob = new Blob([csvContent], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name + ".csv";
+  a.click();
+}
+
 export default function App() {
   const [isConnected, setIsConnected] = useState(false);
   const [settings, setSettings] = useState(initialSettings);
   const [currentPage, setCurrentPage] = useState(0);
-  const [epochData, setEpochData] = useState<ChartData>({
+  const [participantId, setParticipantId] = useState("");
+  const [recordingEpochs, setRecordingEpochs] = useState<number | false>(false);
+  const [recordingTimestamps, setRecordingTimestamps] = useState<
+    number | false
+  >(false);
+
+  const [currentEpoch, setCurrentEpoch] = useState<ChartData>({
     channels: [],
   });
+
+  const [recordedEpochs, setRecordedEpochs] = useState<RecordedEpochs>({});
 
   const [timestampData, setTimestampData] = useState<TimestampData[]>([]);
 
@@ -112,15 +135,15 @@ export default function App() {
   const timestampSubscription = useRef<Subscription>();
   const chartData = useMemo(() => {
     return {
-      labels: epochData.channels[0]?.xLabels || [],
-      datasets: epochData.channels.map((channel, index) => ({
+      labels: currentEpoch.channels[0]?.xLabels || [],
+      datasets: currentEpoch.channels.map((channel, index) => ({
         label: channelNames[index],
         borderColor: channelColors[index],
         data: channel.data.map((x) => x /*+ (300 - index * 100)*/), // Applies offset
         fill: false,
       })),
     };
-  }, [epochData, settings]);
+  }, [currentEpoch, settings]);
 
   useEffect(() => {
     if (epochSubscription.current) epochSubscription.current.unsubscribe();
@@ -138,7 +161,6 @@ export default function App() {
       })
     );
     timestampSubscription.current = timestampPipe.current.subscribe((x) => {
-      console.log(x);
       setTimestampData((prev) => [...prev, x]);
     });
 
@@ -174,14 +196,18 @@ export default function App() {
     console.log("subscribing");
     // const multi = pipe.current.pipe(multicast(() => new Subject()));
     epochSubscription.current = epochPipe.current.subscribe((data) => {
-      setEpochData({
+      const newEpoch = {
         channels: data.data.map((channel) => ({
           data: channel,
           xLabels: generateXTics(settings.srate, settings.duration),
         })),
-      });
+      };
+      setCurrentEpoch(newEpoch);
+      if (recordingEpochs) {
+        setRecordedEpochs((prev) => ({ ...prev, [Date.now()]: newEpoch }));
+      }
     });
-  }, [settings, isConnected]);
+  }, [settings, isConnected, recordingEpochs]);
 
   async function connect() {
     await client.current.connect();
@@ -189,7 +215,42 @@ export default function App() {
     await client.current.start();
   }
 
-  useEffect(() => {}, [epochData]);
+  function printEpochs() {
+    const header = [
+      "Timestamp",
+      "Time String",
+      ...currentEpoch.channels.flatMap((channel, i) =>
+        channel.xLabels.map((f) => `${channelNames[i]}_${f}ms`)
+      ),
+    ];
+
+    const lines = Object.entries(recordedEpochs).map(([timestamp, epoch]) => {
+      const timeString = formatTimestamp(+timestamp);
+      const values = epoch.channels.flatMap((channel) => channel.data);
+      return [timestamp, timeString, ...values].join(",");
+    });
+
+    setRecordedEpochs({});
+    downloadCSV(
+      `epochs_${participantId}_${formatTimestamp(Date.now())}`,
+      header.join(","),
+      lines
+    );
+  }
+
+  useEffect(() => {
+    if (recordingEpochs) {
+      if (Date.now() - recordingEpochs > settings.downloadInterval * 1000) {
+        printEpochs();
+        setRecordingEpochs(Date.now());
+      }
+    }
+  }, [recordedEpochs]);
+
+  function stopRecordingEpochs() {
+    printEpochs();
+    setRecordingEpochs(false);
+  }
 
   async function disconnect() {
     await client.current.disconnect();
@@ -217,9 +278,57 @@ export default function App() {
     setCurrentPage((prev) => Math.max(prev - 1, 0));
   }
 
+  function printTimestamps() {
+    const header = ["Timestamp", "Time String", ...channelNames];
+
+    const lines = timestampData.reverse().map((reading) => {
+      const timeString = formatTimestamp(reading.timestamp);
+      return [
+        reading.timestamp,
+        timeString,
+        ...reading.data.map((value) => value.toFixed(2)),
+      ].join(",");
+    });
+
+    downloadCSV(
+      `timestamps_${participantId}_${formatTimestamp(Date.now())}`,
+      header.join(","),
+      lines
+    );
+  }
+
+  useEffect(() => {
+    if (recordingTimestamps) {
+      if (Date.now() - recordingTimestamps > settings.downloadInterval * 1000) {
+        printTimestamps();
+        setTimestampData([]);
+        setRecordingTimestamps(Date.now());
+      }
+    }
+  }, [timestampData]);
+
+  function stopRecordingTimestamps() {
+    printTimestamps();
+    setTimestampData([]);
+    setRecordingTimestamps(false);
+  }
+
   return (
     <div>
-      <div>
+      <div className="flex items-center gap-4 mb-4">
+        <div className="flex items-center gap-2">
+          <label htmlFor="participantId" className="text-sm">
+            Participant ID:
+          </label>
+          <input
+            id="participantId"
+            type="text"
+            value={participantId}
+            onChange={(e) => setParticipantId(e.target.value)}
+            className="border rounded px-2 py-1"
+            placeholder="Enter ID"
+          />
+        </div>
         {!isConnected ? (
           <Button label="Connect" size="small" onClick={connect} />
         ) : (
@@ -230,8 +339,52 @@ export default function App() {
             onClick={disconnect}
           />
         )}
+        {!recordingEpochs ? (
+          <Button
+            label="Record Epochs"
+            size="small"
+            severity="danger"
+            onClick={() => setRecordingEpochs(Date.now())}
+            disabled={!participantId.trim() || !isConnected}
+          />
+        ) : (
+          <Button
+            label="Stop Recording"
+            size="small"
+            severity="danger"
+            onClick={() => stopRecordingEpochs()}
+          />
+        )}
+        {!recordingTimestamps ? (
+          <Button
+            label="Record Timestamps"
+            size="small"
+            severity="danger"
+            onClick={() => setRecordingTimestamps(Date.now())}
+            disabled={!participantId.trim() || !isConnected}
+          />
+        ) : (
+          <Button
+            label="Stop Recording"
+            size="small"
+            severity="danger"
+            onClick={() => stopRecordingTimestamps()}
+          />
+        )}
+        <div>
+          <h3 className="text-xs">
+            Download Interval: {settings.downloadInterval} seconds
+          </h3>
+          <Slider
+            min={1}
+            step={1}
+            max={500}
+            value={settings.downloadInterval}
+            onChange={(e) => handleSliderChange(e, "downloadInterval")}
+            disabled={!!recordingEpochs}
+          />
+        </div>
       </div>
-      <h2>Epochs</h2>
       <div className="flex">
         <div className="slider-group w-100 text-xs">
           <div>
@@ -280,6 +433,11 @@ export default function App() {
         </div>
       </div>
       <h2>Timestamps</h2>
+      {/* {timestampData.length > 0 && (
+        <h3 className="text-sm">
+          Since {formatTimestamp(timestampData[0].timestamp)}
+        </h3>
+      )} */}
       <div className="overflow-x-auto">
         <div className="grid grid-cols-7 gap-1 text-sm">
           <div className="font-bold p-2 bg-gray-100">Timestamp</div>
