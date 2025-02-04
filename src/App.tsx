@@ -30,7 +30,7 @@ ChartJS.register(
   Legend
 );
 
-type SampleData = {
+type EpochData = {
   data: [
     ch0: number[],
     ch1: number[],
@@ -42,6 +42,12 @@ type SampleData = {
     samplingRate: number;
     startTime: number;
   };
+};
+
+type TimestampData = {
+  data: [ch0: number, ch1: number, ch2: number, ch3: number, ch4: number];
+  index: number;
+  timestamp: number;
 };
 
 type ChartData = {
@@ -78,33 +84,65 @@ const channelColors = [
   "rgba(20,20,20)", // Black
 ];
 
+function formatTimestamp(timestamp: number): string {
+  const date = new Date(timestamp);
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const seconds = String(date.getSeconds()).padStart(2, "0");
+  const milliseconds = String(Math.floor(timestamp % 1000)).padStart(3, "0");
+  return `${month}/${day} ${hours}:${minutes}:${seconds}.${milliseconds}`;
+}
+
 export default function App() {
   const [isConnected, setIsConnected] = useState(false);
   const [settings, setSettings] = useState(initialSettings);
-  const [data, setData] = useState<ChartData>({
+  const [currentPage, setCurrentPage] = useState(0);
+  const [epochData, setEpochData] = useState<ChartData>({
     channels: [],
   });
 
-  const client = useRef(createMuseClient());
-  const pipe = useRef<Observable<SampleData>>();
-  const subscription = useRef<Subscription>();
+  const [timestampData, setTimestampData] = useState<TimestampData[]>([]);
 
+  const client = useRef(createMuseClient());
+  const epochPipe = useRef<Observable<EpochData>>();
+  const timestampPipe = useRef<Observable<TimestampData>>();
+  const epochSubscription = useRef<Subscription>();
+  const timestampSubscription = useRef<Subscription>();
   const chartData = useMemo(() => {
     return {
-      labels: data.channels[0]?.xLabels || [],
-      datasets: data.channels.map((channel, index) => ({
+      labels: epochData.channels[0]?.xLabels || [],
+      datasets: epochData.channels.map((channel, index) => ({
         label: channelNames[index],
         borderColor: channelColors[index],
         data: channel.data.map((x) => x /*+ (300 - index * 100)*/), // Applies offset
         fill: false,
       })),
     };
-  }, [data, settings]);
+  }, [epochData, settings]);
 
   useEffect(() => {
-    if (subscription.current) subscription.current.unsubscribe();
+    if (epochSubscription.current) epochSubscription.current.unsubscribe();
+    if (timestampSubscription.current)
+      timestampSubscription.current.unsubscribe();
     if (!isConnected) return;
-    pipe.current = zipSamples(client.current.eegReadings).pipe(
+
+    setTimestampData([]);
+
+    timestampPipe.current = zipSamples(client.current.eegReadings).pipe(
+      // @ts-expect-error: Type mismatch between RxJS versions. Neurosity uses 7, muse-js uses 6. Our project currently uses 6
+      bandpassFilter({
+        cutoffFrequencies: [settings.cutOffLow, settings.cutOffHigh],
+        nbChannels,
+      })
+    );
+    timestampSubscription.current = timestampPipe.current.subscribe((x) => {
+      console.log(x);
+      setTimestampData((prev) => [...prev, x]);
+    });
+
+    epochPipe.current = zipSamples(client.current.eegReadings).pipe(
       // @ts-expect-error: Type mismatch between RxJS versions. Neurosity uses 7, muse-js uses 6. Our project currently uses 6
       bandpassFilter({
         cutoffFrequencies: [settings.cutOffLow, settings.cutOffHigh],
@@ -135,8 +173,8 @@ export default function App() {
 
     console.log("subscribing");
     // const multi = pipe.current.pipe(multicast(() => new Subject()));
-    subscription.current = pipe.current.subscribe((data) => {
-      setData({
+    epochSubscription.current = epochPipe.current.subscribe((data) => {
+      setEpochData({
         channels: data.data.map((channel) => ({
           data: channel,
           xLabels: generateXTics(settings.srate, settings.duration),
@@ -151,9 +189,7 @@ export default function App() {
     await client.current.start();
   }
 
-  useEffect(() => {
-    console.log(data);
-  }, [data]);
+  useEffect(() => {}, [epochData]);
 
   async function disconnect() {
     await client.current.disconnect();
@@ -165,6 +201,20 @@ export default function App() {
     property: keyof typeof settings
   ) {
     setSettings((prevSettings) => ({ ...prevSettings, [property]: e.value }));
+  }
+
+  const pageSize = 20;
+  const totalPages = Math.ceil(timestampData.length / pageSize);
+  const paginatedData = timestampData
+    .reverse()
+    .slice(currentPage * pageSize, (currentPage + 1) * pageSize);
+
+  function nextPage() {
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages - 1));
+  }
+
+  function prevPage() {
+    setCurrentPage((prev) => Math.max(prev - 1, 0));
   }
 
   return (
@@ -227,6 +277,58 @@ export default function App() {
         </div>
         <div className="w-full max-w-4xl">
           <Line data={chartData} options={eegChartOptions} />
+        </div>
+      </div>
+      <h2>Timestamps</h2>
+      <div className="overflow-x-auto">
+        <div className="grid grid-cols-7 gap-1 text-sm">
+          <div className="font-bold p-2 bg-gray-100">Timestamp</div>
+          <div className="font-bold p-2 bg-gray-100">Time String</div>
+          {channelNames.map((name, index) => (
+            <div
+              key={name}
+              className="font-bold p-2 bg-gray-100"
+              style={{ color: channelColors[index] }}
+            >
+              {name}
+            </div>
+          ))}
+
+          {paginatedData.map((reading) => (
+            <>
+              <div key={`ts-${reading.timestamp}`} className="p-2 border">
+                {reading.timestamp}
+              </div>
+              <div className="p-2 border">
+                {formatTimestamp(reading.timestamp)}
+              </div>
+              {reading.data.map((value, idx) => (
+                <div
+                  key={`val-${reading.timestamp}-${idx}`}
+                  className="p-2 border"
+                >
+                  {value.toFixed(2)}
+                </div>
+              ))}
+            </>
+          ))}
+        </div>
+        <div className="flex justify-between items-center mt-4">
+          <Button
+            label="Newer"
+            size="small"
+            disabled={currentPage === 0}
+            onClick={prevPage}
+          />
+          <span>
+            Page {currentPage + 1} of {Math.max(1, totalPages)}
+          </span>
+          <Button
+            label="Older"
+            size="small"
+            disabled={currentPage >= totalPages - 1}
+            onClick={nextPage}
+          />
         </div>
       </div>
     </div>
