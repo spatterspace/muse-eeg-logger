@@ -101,14 +101,26 @@ function formatTimestamp(timestamp: number): string {
   return new Date(timestamp).toISOString();
 }
 
-function downloadCSV(name: string, header: string, lines: string[]) {
-  const csvContent = [header, ...lines].join("\n");
-  const blob = new Blob([csvContent], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = name + ".csv";
-  a.click();
+function downloadCSV(
+  name: string,
+  header: string,
+  lines: string[]
+): Promise<void> {
+  return new Promise((resolve) => {
+    const csvContent = [header, ...lines].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name + ".csv";
+    a.onclick = () => {
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+        resolve();
+      }, 100);
+    };
+    a.click();
+  });
 }
 
 export default function App() {
@@ -216,7 +228,7 @@ export default function App() {
     await client.current.start();
   }
 
-  function printEpochs() {
+  async function printEpochs() {
     const header = [
       "Timestamp",
       "Time String",
@@ -231,12 +243,12 @@ export default function App() {
       return [timestamp, timeString, ...values].join(",");
     });
 
-    setRecordedEpochs({});
-    downloadCSV(
+    await downloadCSV(
       `epochs_${participantId}_${formatTimestamp(Date.now())}`,
       header.join(","),
       lines
     );
+    setRecordedEpochs({});
   }
 
   useEffect(() => {
@@ -279,7 +291,7 @@ export default function App() {
     setCurrentPage((prev) => Math.max(prev - 1, 0));
   }
 
-  function printTimestamps() {
+  async function printTimestamps() {
     const header = ["Timestamp", "Time String", ...channelNames];
 
     const lines = [...timestampData].map((reading) => {
@@ -291,18 +303,20 @@ export default function App() {
       ].join(",");
     });
 
-    downloadCSV(
+    await downloadCSV(
       `timestamps_${participantId}_${formatTimestamp(Date.now())}`,
       header.join(","),
       lines
     );
+    setTimestampData([]);
   }
 
   useEffect(() => {
     if (recordingTimestamps) {
       if (Date.now() - recordingTimestamps > settings.downloadInterval * 1000) {
-        printTimestamps();
-        setTimestampData([]);
+        printTimestamps().then(() => {
+          setTimestampData([]);
+        });
         setRecordingTimestamps(Date.now());
       }
     }
