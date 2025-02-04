@@ -1,5 +1,6 @@
-import { Button } from "primereact/button";
 import "primereact/resources/themes/lara-light-blue/theme.css";
+import "./app.css";
+import { Button } from "primereact/button";
 import { MuseClient, zipSamples } from "muse-js";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { bandpassFilter, epoch } from "@neurosity/pipes";
@@ -180,49 +181,54 @@ export default function App() {
           />
         )}
       </div>
-      <div className="slider-group">
-        <div>
-          <h3>Epoch duration (Sampling Points): {settings.duration}</h3>
-          <Slider
-            min={1}
-            step={1}
-            max={4096}
-            value={settings.duration}
-            onChange={(e) => handleSliderChange(e, "duration")}
-          />
+      <h2>Epochs</h2>
+      <div className="flex">
+        <div className="slider-group w-100 text-xs">
+          <div>
+            <h3>Epoch duration (Sampling Points): {settings.duration}</h3>
+            <Slider
+              min={1}
+              step={1}
+              max={4096}
+              value={settings.duration}
+              onChange={(e) => handleSliderChange(e, "duration")}
+            />
+          </div>
+          <div>
+            <h3>Sampling points between epochs onsets: {settings.interval}</h3>
+            <Slider
+              min={1}
+              step={1}
+              max={settings.duration}
+              value={settings.interval}
+              onChange={(e) => handleSliderChange(e, "interval")}
+            />
+          </div>
+          <div>
+            <h3>Cutoff Frequency Low: {settings.cutOffLow} Hz</h3>
+            <Slider
+              min={0.01}
+              step={0.5}
+              max={settings.cutOffHigh - 0.5}
+              value={settings.cutOffLow}
+              onChange={(e) => handleSliderChange(e, "cutOffLow")}
+            />
+          </div>
+          <div>
+            <h3>Cutoff Frequency High: {settings.cutOffHigh} Hz</h3>
+            <Slider
+              min={settings.cutOffLow + 0.5}
+              step={0.5}
+              max={settings.srate / 2}
+              value={settings.cutOffHigh}
+              onChange={(e) => handleSliderChange(e, "cutOffHigh")}
+            />
+          </div>
         </div>
-        <div>
-          <h3>Sampling points between epochs onsets: {settings.interval}</h3>
-          <Slider
-            min={1}
-            step={1}
-            max={settings.duration}
-            value={settings.interval}
-            onChange={(e) => handleSliderChange(e, "interval")}
-          />
-        </div>
-        <div>
-          <h3>Cutoff Frequency Low: {settings.cutOffLow} Hz</h3>
-          <Slider
-            min={0.01}
-            step={0.5}
-            max={settings.cutOffHigh - 0.5}
-            value={settings.cutOffLow}
-            onChange={(e) => handleSliderChange(e, "cutOffLow")}
-          />
-        </div>
-        <div>
-          <h3>Cutoff Frequency High: {settings.cutOffHigh} Hz</h3>
-          <Slider
-            min={settings.cutOffLow + 0.5}
-            step={0.5}
-            max={settings.srate / 2}
-            value={settings.cutOffHigh}
-            onChange={(e) => handleSliderChange(e, "cutOffHigh")}
-          />
+        <div className="w-full max-w-4xl">
+          <Line data={chartData} options={eegChartOptions} />
         </div>
       </div>
-      <Line data={chartData} options={eegChartOptions} />
     </div>
   );
 }
