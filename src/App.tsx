@@ -90,14 +90,15 @@ const channelColors = [
 ];
 
 function formatTimestamp(timestamp: number): string {
-  const date = new Date(timestamp);
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  const seconds = String(date.getSeconds()).padStart(2, "0");
-  const milliseconds = String(Math.floor(timestamp % 1000)).padStart(3, "0");
-  return `${month}/${day} ${hours}:${minutes}:${seconds}.${milliseconds}`;
+  // const date = new Date(timestamp);
+  // const month = String(date.getMonth() + 1).padStart(2, "0");
+  // const day = String(date.getDate()).padStart(2, "0");
+  // const hours = String(date.getHours()).padStart(2, "0");
+  // const minutes = String(date.getMinutes()).padStart(2, "0");
+  // const seconds = String(date.getSeconds()).padStart(2, "0");
+  // const milliseconds = String(Math.floor(timestamp % 1000)).padStart(3, "0");
+  // return `${month}/${day} ${hours}:${minutes}:${seconds}.${milliseconds}`;
+  return new Date(timestamp).toISOString();
 }
 
 function downloadCSV(name: string, header: string, lines: string[]) {
@@ -266,7 +267,7 @@ export default function App() {
 
   const pageSize = 20;
   const totalPages = Math.ceil(timestampData.length / pageSize);
-  const paginatedData = timestampData
+  const paginatedData = [...timestampData]
     .reverse()
     .slice(currentPage * pageSize, (currentPage + 1) * pageSize);
 
@@ -281,7 +282,7 @@ export default function App() {
   function printTimestamps() {
     const header = ["Timestamp", "Time String", ...channelNames];
 
-    const lines = timestampData.reverse().map((reading) => {
+    const lines = [...timestampData].map((reading) => {
       const timeString = formatTimestamp(reading.timestamp);
       return [
         reading.timestamp,
