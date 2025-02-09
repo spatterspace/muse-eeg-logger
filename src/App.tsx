@@ -1,10 +1,7 @@
 import "primereact/resources/themes/lara-light-blue/theme.css";
 import "./app.css";
 import { MuseClient } from "muse-js";
-import { useMemo, useRef, useState } from "react";
-import { eegChartOptions } from "./chartOptions";
-
-import { Line } from "react-chartjs-2";
+import { useRef, useState } from "react";
 import {
   Chart as ChartJS,
   LineElement,
@@ -21,6 +18,7 @@ import { useEpochRecording } from "./hooks/useEpochRecording";
 import { useTimestampRecording } from "./hooks/useTimestampRecording";
 import { Settings } from "./types";
 import { SliderChangeEvent } from "primereact/slider";
+import { EEGChart } from "./components/EEGChart";
 
 ChartJS.register(
   LineElement,
@@ -90,18 +88,6 @@ export default function App() {
     channelNames
   );
 
-  const chartData = useMemo(() => {
-    return {
-      labels: currentEpoch.channels[0]?.xLabels || [],
-      datasets: currentEpoch.channels.map((channel, index) => ({
-        label: channelNames[index],
-        borderColor: channelColors[index],
-        data: channel.data.map((x) => x /*+ (300 - index * 100)*/), // Applies offset
-        fill: false,
-      })),
-    };
-  }, [currentEpoch]);
-
   async function connect() {
     await client.current.connect();
     setIsConnected(true);
@@ -151,9 +137,11 @@ export default function App() {
             setSettings((prev) => ({ ...prev, [property]: value }))
           }
         />
-        <div className="w-full max-w-4xl">
-          <Line data={chartData} options={eegChartOptions} />
-        </div>
+        <EEGChart
+          currentEpoch={currentEpoch}
+          channelNames={channelNames}
+          channelColors={channelColors}
+        />
       </div>
       <h2>Timestamps</h2>
       <TimestampTable
