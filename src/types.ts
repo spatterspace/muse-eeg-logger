@@ -18,7 +18,7 @@ export type TimestampData = {
   timestamp: number;
 };
 
-export type ChartData = {
+export type EEGChartData = {
   channels: Array<{
     data: number[];
     xLabels: number[];
@@ -26,14 +26,17 @@ export type ChartData = {
 };
 
 export type RecordedEpochs = {
-  [timestamp: number]: ChartData;
+  [timestamp: number]: EEGChartData;
 };
 
-export type Settings = {
+export interface Settings {
   cutOffLow: number;
   cutOffHigh: number;
   interval: number;
   srate: number;
   duration: number;
   downloadInterval: number;
-};
+  fftBins: number;
+  sliceFFTLow: number;
+  sliceFFTHigh: number;
+}

@@ -1,6 +1,6 @@
 import { Line } from "react-chartjs-2";
 import { ChartOptions } from "chart.js";
-import { ChartData } from "../types";
+import { EEGChartData } from "../types";
 
 const eegChartOptions: ChartOptions<"line"> = {
   scales: {
@@ -25,6 +25,7 @@ const eegChartOptions: ChartOptions<"line"> = {
     },
   },
   responsive: true,
+  maintainAspectRatio: false,
   animation: {
     duration: 0,
   },
@@ -41,7 +42,7 @@ const eegChartOptions: ChartOptions<"line"> = {
 } as const;
 
 type EEGChartProps = {
-  currentEpoch: ChartData;
+  currentEpoch: EEGChartData;
   channelNames: string[];
   channelColors: string[];
 };
@@ -62,7 +63,7 @@ export function EEGChart({
   };
 
   return (
-    <div className="w-full max-w-4xl">
+    <div className="w-full h-96 max-w-4xl">
       <Line data={chartData} options={eegChartOptions} />
     </div>
   );

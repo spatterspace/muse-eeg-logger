@@ -19,6 +19,9 @@ import { useTimestampRecording } from "./hooks/useTimestampRecording";
 import { Settings } from "./types";
 import { SliderChangeEvent } from "primereact/slider";
 import { EEGChart } from "./components/EEGChart";
+import { SpectraChart } from "./components/SpectraChart";
+import { useSpectraRecording } from "./hooks/useSpectraRecording";
+import { FFTSliders } from "./components/FFTSliders";
 
 ChartJS.register(
   LineElement,
@@ -36,6 +39,9 @@ const initialSettings: Settings = {
   srate: 256, // never exposed to the end user
   duration: 512,
   downloadInterval: 10, // Time in seconds between downloads
+  fftBins: 512,
+  sliceFFTLow: 1,
+  sliceFFTHigh: 100,
 };
 
 const enableAux = true;
@@ -88,6 +94,19 @@ export default function App() {
     channelNames
   );
 
+  const {
+    currentSpectra,
+    recordingSpectra,
+    setRecordingSpectra,
+    stopRecordingSpectra,
+  } = useSpectraRecording(
+    client,
+    isConnected,
+    settings,
+    participantId,
+    channelNames
+  );
+
   async function connect() {
     await client.current.connect();
     setIsConnected(true);
@@ -129,8 +148,12 @@ export default function App() {
         onDownloadIntervalChange={(e) =>
           handleSliderChange(e, "downloadInterval")
         }
+        // Spectra recording
+        recordingSpectra={recordingSpectra}
+        onStartRecordingSpectra={() => setRecordingSpectra(Date.now())}
+        onStopRecordingSpectra={stopRecordingSpectra}
       />
-      <div className="flex">
+      <div className="grid grid-cols-[25rem_1fr] gap-4 w-full">
         <EpochSliders
           settings={settings}
           onSettingChange={(property, value) =>
@@ -139,6 +162,18 @@ export default function App() {
         />
         <EEGChart
           currentEpoch={currentEpoch}
+          channelNames={channelNames}
+          channelColors={channelColors}
+        />
+
+        <FFTSliders
+          settings={settings}
+          onSettingChange={(property, value) =>
+            setSettings((prev) => ({ ...prev, [property]: value }))
+          }
+        />
+        <SpectraChart
+          currentSpectra={currentSpectra}
           channelNames={channelNames}
           channelColors={channelColors}
         />

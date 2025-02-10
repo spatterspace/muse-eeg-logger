@@ -20,6 +20,10 @@ interface TopBarProps {
   // Download interval
   downloadInterval: number;
   onDownloadIntervalChange: (e: SliderChangeEvent) => void;
+  // Add new props for spectra recording
+  recordingSpectra: number | null;
+  onStartRecordingSpectra: () => void;
+  onStopRecordingSpectra: () => void;
 }
 
 export function TopBar({
@@ -36,6 +40,9 @@ export function TopBar({
   onStopRecordingTimestamps,
   downloadInterval,
   onDownloadIntervalChange,
+  recordingSpectra,
+  onStartRecordingSpectra,
+  onStopRecordingSpectra,
 }: TopBarProps) {
   return (
     <div className="flex items-center gap-4 mb-4">
@@ -94,6 +101,17 @@ export function TopBar({
           onClick={onStopRecordingTimestamps}
         />
       )}
+      <span className="p-buttonset">
+        <Button
+          label={recordingSpectra ? "Stop Recording Spectra" : "Record Spectra"}
+          icon={recordingSpectra ? "pi pi-stop" : "pi pi-play"}
+          onClick={
+            recordingSpectra ? onStopRecordingSpectra : onStartRecordingSpectra
+          }
+          disabled={!isConnected}
+          severity={recordingSpectra ? "danger" : "success"}
+        />
+      </span>
       <div>
         <h3 className="text-xs">
           Download Interval: {downloadInterval} seconds

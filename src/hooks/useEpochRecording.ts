@@ -6,7 +6,7 @@ import { zipSamples, MuseClient } from "muse-js";
 import { generateXTics } from "../chartUtils";
 import { downloadCSV } from "../downloadUtils";
 import { formatTimestamp } from "../downloadUtils";
-import { ChartData, EpochData, RecordedEpochs, Settings } from "../types";
+import { EEGChartData, EpochData, RecordedEpochs, Settings } from "../types";
 
 export function useEpochRecording(
   client: RefObject<MuseClient>,
@@ -15,7 +15,7 @@ export function useEpochRecording(
   participantId: string,
   channelNames: string[]
 ) {
-  const [currentEpoch, setCurrentEpoch] = useState<ChartData>({
+  const [currentEpoch, setCurrentEpoch] = useState<EEGChartData>({
     channels: [],
   });
   const [recordingEpochs, setRecordingEpochs] = useState<number | false>(false);
@@ -26,13 +26,13 @@ export function useEpochRecording(
 
   useEffect(() => {
     if (epochSubscription.current) epochSubscription.current.unsubscribe();
-    if (!isConnected) return;
+    if (!isConnected || !client.current) return;
 
     epochPipe.current = zipSamples(client.current!.eegReadings).pipe(
       // @ts-expect-error: Type mismatch between RxJS versions
       bandpassFilter({
         cutoffFrequencies: [settings.cutOffLow, settings.cutOffHigh],
-        nbChannels: client.current!.enableAux ? 5 : 4,
+        nbChannels: client.current.enableAux ? 5 : 4,
       }),
       epoch({
         interval: settings.interval,

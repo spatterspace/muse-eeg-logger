@@ -24,15 +24,15 @@ export function useTimestampRecording(
   useEffect(() => {
     if (timestampSubscription.current)
       timestampSubscription.current.unsubscribe();
-    if (!isConnected) return;
+    if (!isConnected || !client.current) return;
 
     setTimestampData([]);
 
-    timestampPipe.current = zipSamples(client.current!.eegReadings).pipe(
+    timestampPipe.current = zipSamples(client.current.eegReadings).pipe(
       // @ts-expect-error: Type mismatch between RxJS versions
       bandpassFilter({
         cutoffFrequencies: [settings.cutOffLow, settings.cutOffHigh],
-        nbChannels: client.current!.enableAux ? 5 : 4,
+        nbChannels: client.current.enableAux ? 5 : 4,
       })
     );
 

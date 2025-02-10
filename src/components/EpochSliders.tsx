@@ -17,10 +17,13 @@ type EpochSlidersProps = {
 
 export function EpochSliders({ settings, onSettingChange }: EpochSlidersProps) {
   return (
-    <div className="slider-group w-100 text-xs">
+    <div className="p-4 flex flex-col gap-4">
       <div>
-        <h3>Epoch duration (Sampling Points): {settings.duration}</h3>
+        <label htmlFor="duration" className="block mb-2">
+          Epoch Duration (Sampling Points): {settings.duration}
+        </label>
         <Slider
+          id="duration"
           min={1}
           step={1}
           max={4096}
@@ -28,9 +31,13 @@ export function EpochSliders({ settings, onSettingChange }: EpochSlidersProps) {
           onChange={(e) => onSettingChange("duration", e.value as number)}
         />
       </div>
+
       <div>
-        <h3>Sampling points between epochs onsets: {settings.interval}</h3>
+        <label htmlFor="interval" className="block mb-2">
+          Sampling Points Between Epochs: {settings.interval}
+        </label>
         <Slider
+          id="interval"
           min={1}
           step={1}
           max={settings.duration}
@@ -38,9 +45,13 @@ export function EpochSliders({ settings, onSettingChange }: EpochSlidersProps) {
           onChange={(e) => onSettingChange("interval", e.value as number)}
         />
       </div>
+
       <div>
-        <h3>Cutoff Frequency Low: {settings.cutOffLow} Hz</h3>
+        <label htmlFor="cutOffLow" className="block mb-2">
+          Cutoff Frequency Low: {settings.cutOffLow} Hz
+        </label>
         <Slider
+          id="cutOffLow"
           min={0.01}
           step={0.5}
           max={settings.cutOffHigh - 0.5}
@@ -48,9 +59,13 @@ export function EpochSliders({ settings, onSettingChange }: EpochSlidersProps) {
           onChange={(e) => onSettingChange("cutOffLow", e.value as number)}
         />
       </div>
+
       <div>
-        <h3>Cutoff Frequency High: {settings.cutOffHigh} Hz</h3>
+        <label htmlFor="cutOffHigh" className="block mb-2">
+          Cutoff Frequency High: {settings.cutOffHigh} Hz
+        </label>
         <Slider
+          id="cutOffHigh"
           min={settings.cutOffLow + 0.5}
           step={0.5}
           max={settings.srate / 2}
