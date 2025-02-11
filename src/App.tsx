@@ -156,13 +156,11 @@ export default function App() {
           }
         />
 
-        {showCharts && (
-          <EEGChart
-            currentEpoch={currentEpoch}
-            channelNames={channelNames}
-            channelColors={channelColors}
-          />
-        )}
+        <EEGChart
+          currentEpoch={showCharts ? currentEpoch : { channels: [] }}
+          channelNames={channelNames}
+          channelColors={channelColors}
+        />
 
         <FFTSliders
           settings={settings}
@@ -170,13 +168,11 @@ export default function App() {
             setSettings((prev) => ({ ...prev, [property]: value }))
           }
         />
-        {showCharts && (
-          <SpectraChart
-            currentSpectra={currentSpectra}
-            channelNames={channelNames}
-            channelColors={channelColors}
-          />
-        )}
+        <SpectraChart
+          currentSpectra={showCharts ? currentSpectra : { channels: [] }}
+          channelNames={channelNames}
+          channelColors={channelColors}
+        />
       </div>
       {/* <h2>Timestamps</h2>
       <TimestampTable
