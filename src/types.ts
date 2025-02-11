@@ -18,10 +18,6 @@ export type SpectraChartData = {
   }>;
 };
 
-export type RecordedEpochs = {
-  [timestamp: number]: EEGChartData;
-};
-
 export interface Settings {
   cutOffLow: number;
   cutOffHigh: number;

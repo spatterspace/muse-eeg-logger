@@ -1,5 +1,5 @@
 import { Button } from "primereact/button";
-import { Slider, SliderChangeEvent } from "primereact/slider";
+import { InputNumber } from "primereact/inputnumber";
 
 interface TopBarProps {
   // Participant ID
@@ -17,13 +17,13 @@ interface TopBarProps {
   recordingTimestamps: number | false;
   onStartRecordingTimestamps: () => void;
   onStopRecordingTimestamps: () => void;
-  // Download interval
-  downloadInterval: number;
-  onDownloadIntervalChange: (e: SliderChangeEvent) => void;
-  // Add new props for spectra recording
-  recordingSpectra: number | null;
+  // Spectra recording
+  recordingSpectra: number | false;
   onStartRecordingSpectra: () => void;
   onStopRecordingSpectra: () => void;
+  // Download interval
+  downloadInterval: number;
+  onDownloadIntervalChange: (value: number) => void;
 }
 
 export function TopBar({
@@ -98,17 +98,20 @@ export function TopBar({
         disabled={!isConnected}
         severity={recordingSpectra ? "danger" : "success"}
       />
-      <div>
-        <h3 className="text-xs">
-          Download Interval: {downloadInterval} seconds
-        </h3>
-        <Slider
-          min={1}
-          step={1}
-          max={500}
+      <div className="flex items-center gap-2">
+        <label htmlFor="downloadInterval" className="text-sm">
+          Download Interval (seconds):
+        </label>
+        <InputNumber
+          id="downloadInterval"
           value={downloadInterval}
-          onChange={onDownloadIntervalChange}
+          onValueChange={(e) => onDownloadIntervalChange(e.value ?? 1)}
+          min={1}
+          max={500}
           disabled={!!recordingEpochs}
+          className="w-20"
+          size={5}
+          useGrouping={false}
         />
       </div>
     </div>

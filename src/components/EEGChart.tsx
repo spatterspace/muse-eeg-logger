@@ -57,6 +57,7 @@ export function EEGChart({
     datasets: currentEpoch.channels.map((channel, index) => ({
       label: channelNames[index],
       borderColor: channelColors[index],
+      backgroundColor: channelColors[index],
       data: channel.data.map((x) => x /*+ (300 - index * 100)*/), // Applies offset
       fill: false,
     })),

@@ -6,22 +6,32 @@ import { bandpassFilter, epoch, fft, sliceFFT } from "@neurosity/pipes";
 import { catchError } from "rxjs/operators";
 import { zipSamples } from "muse-js";
 import { Settings, SpectraChartData } from "../types";
+import { formatTimestamp } from "../downloadUtils";
+import { downloadCSV } from "../downloadUtils";
 
 interface SpectraData {
   psd: number[][];
   freqs: number[];
 }
 
+type RecordedSpectra = {
+  [timestamp: number]: SpectraChartData;
+};
 export function useSpectraRecording(
   client: RefObject<MuseClient>,
   isConnected: boolean,
   settings: Settings,
-  channelNames: string[]
+  channelNames: string[],
+  participantId: string
 ) {
   const [currentSpectra, setCurrentSpectra] = useState<SpectraChartData>({
     channels: [],
   });
-  const [recordingSpectra, setRecordingSpectra] = useState<number | null>(null);
+  const [recordingSpectra, setRecordingSpectra] = useState<number | false>(
+    false
+  );
+  const [recordedSpectra, setRecordedSpectra] = useState<RecordedSpectra>({});
+
   const spectraPipe = useRef<Observable<SpectraData>>();
   const spectraSubscription = useRef<Subscription>();
 
@@ -56,11 +66,53 @@ export function useSpectraRecording(
         })),
       };
       setCurrentSpectra(currentSpectra);
+      if (recordingSpectra) {
+        console.log("pushing", Date.now());
+        setRecordedSpectra((prev) => ({
+          ...prev,
+          [Date.now()]: currentSpectra,
+        }));
+      }
     });
-  }, [isConnected, client, settings, channelNames]);
+  }, [isConnected, client, settings, recordingSpectra]);
 
-  const stopRecordingSpectra = () => {
-    setRecordingSpectra(null);
+  const printSpectra = async () => {
+    const header = [
+      "Timestamp",
+      "Time String",
+      ...currentSpectra.channels.flatMap((channel, i) =>
+        channel.xLabels.map((f) => `${channelNames[i]}_${f}Hz`)
+      ),
+    ];
+
+    const lines = Object.entries(recordedSpectra).map(
+      ([timestamp, spectra]) => {
+        const timeString = formatTimestamp(+timestamp);
+        const values = spectra.channels.flatMap((channel) => channel.data);
+        return [timestamp, timeString, ...values].join(",");
+      }
+    );
+
+    await downloadCSV(
+      `spectra_${participantId}_${formatTimestamp(Date.now())}`,
+      header.join(","),
+      lines
+    );
+    setRecordedSpectra({});
+  };
+
+  useEffect(() => {
+    if (recordingSpectra) {
+      if (Date.now() - recordingSpectra > settings.downloadInterval * 1000) {
+        printSpectra();
+        setRecordingSpectra(Date.now());
+      }
+    }
+  }, [recordedSpectra, settings.downloadInterval, participantId]);
+
+  const stopRecordingSpectra = async () => {
+    await printSpectra();
+    setRecordingSpectra(false);
   };
 
   return {

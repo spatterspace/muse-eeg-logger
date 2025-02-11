@@ -12,12 +12,11 @@ import {
   Legend,
 } from "chart.js";
 import { EpochSliders } from "./components/EpochSliders";
-import { TimestampTable } from "./components/TimestampTable";
+// import { TimestampTable } from "./components/TimestampTable";
 import { TopBar } from "./components/TopBar";
 import { useEpochRecording } from "./hooks/useEpochRecording";
 import { useTimestampRecording } from "./hooks/useTimestampRecording";
 import { Settings } from "./types";
-import { SliderChangeEvent } from "primereact/slider";
 import { EEGChart } from "./components/EEGChart";
 import { SpectraChart } from "./components/SpectraChart";
 import { useSpectraRecording } from "./hooks/useSpectraRecording";
@@ -77,12 +76,12 @@ export default function App() {
     client,
     isConnected,
     settings,
-    participantId,
-    channelNames
+    channelNames,
+    participantId
   );
 
   const {
-    timestampData,
+    // timestampData,
     recordingTimestamps,
     setRecordingTimestamps,
     stopRecordingTimestamps,
@@ -90,8 +89,8 @@ export default function App() {
     client,
     isConnected,
     settings,
-    participantId,
-    channelNames
+    channelNames,
+    participantId
   );
 
   const {
@@ -99,7 +98,13 @@ export default function App() {
     recordingSpectra,
     setRecordingSpectra,
     stopRecordingSpectra,
-  } = useSpectraRecording(client, isConnected, settings, channelNames);
+  } = useSpectraRecording(
+    client,
+    isConnected,
+    settings,
+    channelNames,
+    participantId
+  );
 
   async function connect() {
     await client.current.connect();
@@ -112,12 +117,8 @@ export default function App() {
     setIsConnected(false);
   }
 
-  function handleSliderChange(
-    e: SliderChangeEvent,
-    property: keyof typeof settings
-  ) {
-    setSettings((prevSettings) => ({ ...prevSettings, [property]: e.value }));
-  }
+  const showCharts =
+    !recordingEpochs && !recordingTimestamps && !recordingSpectra;
 
   return (
     <div>
@@ -137,15 +138,15 @@ export default function App() {
         recordingTimestamps={recordingTimestamps}
         onStartRecordingTimestamps={() => setRecordingTimestamps(Date.now())}
         onStopRecordingTimestamps={stopRecordingTimestamps}
-        // Download interval
-        downloadInterval={settings.downloadInterval}
-        onDownloadIntervalChange={(e) =>
-          handleSliderChange(e, "downloadInterval")
-        }
         // Spectra recording
         recordingSpectra={recordingSpectra}
         onStartRecordingSpectra={() => setRecordingSpectra(Date.now())}
         onStopRecordingSpectra={stopRecordingSpectra}
+        // Download interval
+        downloadInterval={settings.downloadInterval}
+        onDownloadIntervalChange={(value: number) =>
+          setSettings((prev) => ({ ...prev, downloadInterval: value }))
+        }
       />
       <div className="grid grid-cols-[25rem_1fr] gap-4 w-full">
         <EpochSliders
@@ -154,11 +155,14 @@ export default function App() {
             setSettings((prev) => ({ ...prev, [property]: value }))
           }
         />
-        <EEGChart
-          currentEpoch={currentEpoch}
-          channelNames={channelNames}
-          channelColors={channelColors}
-        />
+
+        {showCharts && (
+          <EEGChart
+            currentEpoch={currentEpoch}
+            channelNames={channelNames}
+            channelColors={channelColors}
+          />
+        )}
 
         <FFTSliders
           settings={settings}
@@ -166,18 +170,20 @@ export default function App() {
             setSettings((prev) => ({ ...prev, [property]: value }))
           }
         />
-        <SpectraChart
-          currentSpectra={currentSpectra}
-          channelNames={channelNames}
-          channelColors={channelColors}
-        />
+        {showCharts && (
+          <SpectraChart
+            currentSpectra={currentSpectra}
+            channelNames={channelNames}
+            channelColors={channelColors}
+          />
+        )}
       </div>
-      <h2>Timestamps</h2>
+      {/* <h2>Timestamps</h2>
       <TimestampTable
         timestampData={timestampData}
         channelNames={channelNames}
         channelColors={channelColors}
-      />
+      /> */}
     </div>
   );
 }

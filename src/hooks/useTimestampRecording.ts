@@ -10,8 +10,8 @@ export function useTimestampRecording(
   client: RefObject<MuseClient>,
   isConnected: boolean,
   settings: Pick<Settings, "cutOffLow" | "cutOffHigh" | "downloadInterval">,
-  participantId: string,
-  channelNames: string[]
+  channelNames: string[],
+  participantId: string
 ) {
   const [timestampData, setTimestampData] = useState<TimestampData[]>([]);
   const [recordingTimestamps, setRecordingTimestamps] = useState<

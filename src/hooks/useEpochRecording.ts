@@ -6,7 +6,7 @@ import { zipSamples, MuseClient } from "muse-js";
 import { generateXTics } from "../chartUtils";
 import { downloadCSV } from "../downloadUtils";
 import { formatTimestamp } from "../downloadUtils";
-import { EEGChartData, RecordedEpochs, Settings } from "../types";
+import { EEGChartData, Settings } from "../types";
 
 type EpochData = {
   data: [
@@ -21,12 +21,16 @@ type EpochData = {
     startTime: number;
   };
 };
+
+type RecordedEpochs = {
+  [timestamp: number]: EEGChartData;
+};
 export function useEpochRecording(
   client: RefObject<MuseClient>,
   isConnected: boolean,
   settings: Settings,
-  participantId: string,
-  channelNames: string[]
+  channelNames: string[],
+  participantId: string
 ) {
   const [currentEpoch, setCurrentEpoch] = useState<EEGChartData>({
     channels: [],
