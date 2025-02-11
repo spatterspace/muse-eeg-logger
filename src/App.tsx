@@ -39,9 +39,9 @@ const initialSettings: Settings = {
   srate: 256, // never exposed to the end user
   duration: 512,
   downloadInterval: 10, // Time in seconds between downloads
-  fftBins: 512,
   sliceFFTLow: 1,
   sliceFFTHigh: 100,
+  fftBins: 256,
 };
 
 const enableAux = true;
@@ -99,13 +99,7 @@ export default function App() {
     recordingSpectra,
     setRecordingSpectra,
     stopRecordingSpectra,
-  } = useSpectraRecording(
-    client,
-    isConnected,
-    settings,
-    participantId,
-    channelNames
-  );
+  } = useSpectraRecording(client, isConnected, settings, channelNames);
 
   async function connect() {
     await client.current.connect();

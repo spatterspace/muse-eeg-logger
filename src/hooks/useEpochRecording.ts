@@ -6,8 +6,21 @@ import { zipSamples, MuseClient } from "muse-js";
 import { generateXTics } from "../chartUtils";
 import { downloadCSV } from "../downloadUtils";
 import { formatTimestamp } from "../downloadUtils";
-import { EEGChartData, EpochData, RecordedEpochs, Settings } from "../types";
+import { EEGChartData, RecordedEpochs, Settings } from "../types";
 
+type EpochData = {
+  data: [
+    ch0: number[],
+    ch1: number[],
+    ch2: number[],
+    ch3: number[],
+    ch4: number[]
+  ];
+  info: {
+    samplingRate: number;
+    startTime: number;
+  };
+};
 export function useEpochRecording(
   client: RefObject<MuseClient>,
   isConnected: boolean,

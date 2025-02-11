@@ -69,49 +69,35 @@ export function TopBar({
           onClick={onDisconnect}
         />
       )}
-      {!recordingEpochs ? (
-        <Button
-          label="Record Epochs"
-          size="small"
-          severity="danger"
-          onClick={onStartRecordingEpochs}
-          disabled={!participantId.trim() || !isConnected}
-        />
-      ) : (
-        <Button
-          label="Stop Recording"
-          size="small"
-          severity="danger"
-          onClick={onStopRecordingEpochs}
-        />
-      )}
-      {!recordingTimestamps ? (
-        <Button
-          label="Record Timestamps"
-          size="small"
-          severity="danger"
-          onClick={onStartRecordingTimestamps}
-          disabled={!participantId.trim() || !isConnected}
-        />
-      ) : (
-        <Button
-          label="Stop Recording"
-          size="small"
-          severity="danger"
-          onClick={onStopRecordingTimestamps}
-        />
-      )}
-      <span className="p-buttonset">
-        <Button
-          label={recordingSpectra ? "Stop Recording Spectra" : "Record Spectra"}
-          icon={recordingSpectra ? "pi pi-stop" : "pi pi-play"}
-          onClick={
-            recordingSpectra ? onStopRecordingSpectra : onStartRecordingSpectra
-          }
-          disabled={!isConnected}
-          severity={recordingSpectra ? "danger" : "success"}
-        />
-      </span>
+      <Button
+        size="small"
+        label={recordingEpochs ? "Stop Recording" : "Record Epochs"}
+        onClick={
+          recordingEpochs ? onStopRecordingEpochs : onStartRecordingEpochs
+        }
+        disabled={!participantId.trim() || !isConnected}
+        severity={recordingEpochs ? "danger" : "success"}
+      />
+      <Button
+        size="small"
+        label={recordingTimestamps ? "Stop Recording" : "Record Timestamps"}
+        onClick={
+          recordingTimestamps
+            ? onStopRecordingTimestamps
+            : onStartRecordingTimestamps
+        }
+        disabled={!participantId.trim() || !isConnected}
+        severity={recordingTimestamps ? "danger" : "success"}
+      />
+      <Button
+        size="small"
+        label={recordingSpectra ? "Stop Recording Spectra" : "Record Spectra"}
+        onClick={
+          recordingSpectra ? onStopRecordingSpectra : onStartRecordingSpectra
+        }
+        disabled={!isConnected}
+        severity={recordingSpectra ? "danger" : "success"}
+      />
       <div>
         <h3 className="text-xs">
           Download Interval: {downloadInterval} seconds

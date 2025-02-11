@@ -1,17 +1,3 @@
-export type EpochData = {
-  data: [
-    ch0: number[],
-    ch1: number[],
-    ch2: number[],
-    ch3: number[],
-    ch4: number[]
-  ];
-  info: {
-    samplingRate: number;
-    startTime: number;
-  };
-};
-
 export type TimestampData = {
   data: [ch0: number, ch1: number, ch2: number, ch3: number, ch4: number];
   index: number;
@@ -19,6 +5,13 @@ export type TimestampData = {
 };
 
 export type EEGChartData = {
+  channels: Array<{
+    data: number[];
+    xLabels: number[];
+  }>;
+};
+
+export type SpectraChartData = {
   channels: Array<{
     data: number[];
     xLabels: number[];
@@ -36,7 +29,7 @@ export interface Settings {
   srate: number;
   duration: number;
   downloadInterval: number;
-  fftBins: number;
   sliceFFTLow: number;
   sliceFFTHigh: number;
+  fftBins: number;
 }

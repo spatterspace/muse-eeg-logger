@@ -5,6 +5,7 @@ import { Observable, Subscription } from "rxjs";
 import { bandpassFilter, epoch, fft, sliceFFT } from "@neurosity/pipes";
 import { catchError } from "rxjs/operators";
 import { zipSamples } from "muse-js";
+import { Settings, SpectraChartData } from "../types";
 
 interface SpectraData {
   psd: number[][];
@@ -14,19 +15,12 @@ interface SpectraData {
 export function useSpectraRecording(
   client: RefObject<MuseClient>,
   isConnected: boolean,
-  settings: {
-    cutOffLow: number;
-    cutOffHigh: number;
-    interval: number;
-    duration: number;
-    srate: number;
-  },
-  participantId: string,
+  settings: Settings,
   channelNames: string[]
 ) {
-  const [currentSpectra, setCurrentSpectra] = useState<SpectraData | null>(
-    null
-  );
+  const [currentSpectra, setCurrentSpectra] = useState<SpectraChartData>({
+    channels: [],
+  });
   const [recordingSpectra, setRecordingSpectra] = useState<number | null>(null);
   const spectraPipe = useRef<Observable<SpectraData>>();
   const spectraSubscription = useRef<Subscription>();
@@ -46,8 +40,8 @@ export function useSpectraRecording(
         interval: settings.interval,
         samplingRate: settings.srate,
       }),
-      fft({ bins: settings.duration }),
-      sliceFFT([settings.cutOffLow, settings.cutOffHigh]),
+      fft({ bins: settings.fftBins }),
+      sliceFFT([settings.sliceFFTLow, settings.sliceFFTHigh]),
       catchError((err) => {
         console.error("Error in spectra pipe:", err);
         throw err;
@@ -55,19 +49,14 @@ export function useSpectraRecording(
     );
 
     spectraSubscription.current = spectraPipe.current.subscribe((data) => {
-      setCurrentSpectra(data);
+      const currentSpectra = {
+        channels: data.psd.map((psd) => ({
+          data: psd,
+          xLabels: data.freqs,
+        })),
+      };
+      setCurrentSpectra(currentSpectra);
     });
-
-    // const sub = (pipe$ as any).subscribe((data: SpectraData) => {
-    //   setCurrentSpectra(data);
-    // });
-
-    // setSubscription(sub);
-    // (pipe$ as any).connect();
-
-    // return () => {
-    //   if (sub) sub.unsubscribe();
-    // };
   }, [isConnected, client, settings, channelNames]);
 
   const stopRecordingSpectra = () => {

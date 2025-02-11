@@ -53,7 +53,7 @@ export function EEGChart({
   channelColors,
 }: EEGChartProps) {
   const chartData = {
-    labels: currentEpoch.channels[0]?.xLabels || [],
+    labels: currentEpoch.channels[0]?.xLabels ?? [],
     datasets: currentEpoch.channels.map((channel, index) => ({
       label: channelNames[index],
       borderColor: channelColors[index],

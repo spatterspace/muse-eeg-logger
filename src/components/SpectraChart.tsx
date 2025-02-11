@@ -1,10 +1,8 @@
 import { Line } from "react-chartjs-2";
+import { SpectraChartData } from "../types";
 
 interface SpectraChartProps {
-  currentSpectra: {
-    psd: number[][];
-    freqs: number[];
-  } | null;
+  currentSpectra: SpectraChartData;
   channelNames: string[];
   channelColors: string[];
 }
@@ -17,10 +15,10 @@ export function SpectraChart({
   if (!currentSpectra) return null;
 
   const data = {
-    labels: currentSpectra.freqs,
-    datasets: channelNames.map((name, index) => ({
-      label: name,
-      data: currentSpectra.psd[index],
+    labels: currentSpectra.channels[0]?.xLabels ?? [],
+    datasets: currentSpectra.channels.map((channel, index) => ({
+      label: channelNames[index],
+      data: channel.data,
       borderColor: channelColors[index],
       backgroundColor: channelColors[index],
       fill: false,
@@ -33,7 +31,7 @@ export function SpectraChart({
     plugins: {
       title: {
         display: true,
-        text: "EEG Frequency Spectrum",
+        text: "Spectral data from each electrode",
       },
     },
     scales: {
@@ -46,7 +44,7 @@ export function SpectraChart({
       y: {
         title: {
           display: true,
-          text: "Power Spectral Density",
+          text: "Power (\u03BCV\u00B2)",
         },
       },
     },
