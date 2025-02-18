@@ -33,17 +33,17 @@ export function TopBar({
   onConnect,
   onDisconnect,
   recordingEpochs,
-  onStartRecordingEpochs,
-  onStopRecordingEpochs,
+  // onStartRecordingEpochs,
+  // onStopRecordingEpochs,
   recordingTimestamps,
   onStartRecordingTimestamps,
   onStopRecordingTimestamps,
   downloadInterval,
   onDownloadIntervalChange,
-  recordingSpectra,
-  onStartRecordingSpectra,
-  onStopRecordingSpectra,
-}: TopBarProps) {
+}: // recordingSpectra,
+// onStartRecordingSpectra,
+// onStopRecordingSpectra,
+TopBarProps) {
   return (
     <div className="flex items-center gap-4 mb-4">
       <div className="flex items-center gap-2">
@@ -60,7 +60,12 @@ export function TopBar({
         />
       </div>
       {!isConnected ? (
-        <Button label="Connect" size="small" onClick={onConnect} />
+        <Button
+          label="Connect"
+          size="small"
+          onClick={onConnect}
+          disabled={!participantId.trim()}
+        />
       ) : (
         <Button
           label="Disconnect"
@@ -69,7 +74,7 @@ export function TopBar({
           onClick={onDisconnect}
         />
       )}
-      <Button
+      {/* <Button
         size="small"
         label={recordingEpochs ? "Stop Recording" : "Record Epochs"}
         onClick={
@@ -77,7 +82,7 @@ export function TopBar({
         }
         disabled={!participantId.trim() || !isConnected}
         severity={recordingEpochs ? "danger" : "success"}
-      />
+      /> */}
       <Button
         size="small"
         label={recordingTimestamps ? "Stop Recording" : "Record Timestamps"}
@@ -89,15 +94,15 @@ export function TopBar({
         disabled={!participantId.trim() || !isConnected}
         severity={recordingTimestamps ? "danger" : "success"}
       />
-      <Button
+      {/* <Button
         size="small"
         label={recordingSpectra ? "Stop Recording Spectra" : "Record Spectra"}
         onClick={
           recordingSpectra ? onStopRecordingSpectra : onStartRecordingSpectra
         }
-        disabled={!isConnected}
+        disabled={!participantId.trim() || !isConnected}
         severity={recordingSpectra ? "danger" : "success"}
-      />
+      /> */}
       <div className="flex items-center gap-2">
         <label htmlFor="downloadInterval" className="text-sm">
           Download Interval (seconds):
