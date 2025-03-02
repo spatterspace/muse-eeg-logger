@@ -21,6 +21,7 @@ import { EEGChart } from "./components/EEGChart";
 import { SpectraChart } from "./components/SpectraChart";
 import { useSpectraRecording } from "./hooks/useSpectraRecording";
 import { FFTSliders } from "./components/FFTSliders";
+import { Card } from "primereact/card";
 
 ChartJS.register(
   LineElement,
@@ -121,65 +122,100 @@ export default function App() {
     !recordingEpochs && !recordingTimestamps && !recordingSpectra;
 
   return (
-    <div>
-      <TopBar
-        // Participant ID
-        participantId={participantId}
-        setParticipantId={setParticipantId}
-        // Connection
-        isConnected={isConnected}
-        onConnect={connect}
-        onDisconnect={disconnect}
-        // Epoch recording
-        recordingEpochs={recordingEpochs}
-        onStartRecordingEpochs={() => setRecordingEpochs(Date.now())}
-        onStopRecordingEpochs={stopRecordingEpochs}
-        // Timestamp recording
-        recordingTimestamps={recordingTimestamps}
-        onStartRecordingTimestamps={() => setRecordingTimestamps(Date.now())}
-        onStopRecordingTimestamps={stopRecordingTimestamps}
-        // Spectra recording
-        recordingSpectra={recordingSpectra}
-        onStartRecordingSpectra={() => setRecordingSpectra(Date.now())}
-        onStopRecordingSpectra={stopRecordingSpectra}
-        // Download interval
-        downloadInterval={settings.downloadInterval}
-        onDownloadIntervalChange={(value: number) =>
-          setSettings((prev) => ({ ...prev, downloadInterval: value }))
-        }
-      />
-      <div className="grid grid-cols-[25rem_1fr] gap-4 w-full">
-        <EpochSliders
-          settings={settings}
-          onSettingChange={(property, value) =>
-            setSettings((prev) => ({ ...prev, [property]: value }))
+    <>
+      <Card title="Instructions" className="max-w-3xl">
+        This project has been tested on Chrome on Windows and Mac.
+        <ul>
+          <li>
+            To unlock the record buttons, enter the participant ID in the box.
+            If you don't have a participant in mind, enter anything. Then press
+            Connect and use the browser Bluetooth popup to connect to the
+            device.
+          </li>
+          <li>
+            To force Chrome to allow multiple downloads, set the download
+            interval to 2s and hit Record Timestamps. If Chrome prompts you to
+            allow downloading multiple files, click Allow.
+          </li>
+          <li>
+            To turn off Chrome's download popups, go to Chrome Settings, search
+            "Show downloads when they are done", and disable that.
+          </li>
+        </ul>
+        <p>
+          The toggles and the graphs are meant to help you test the device, but
+          they have no impact on the data recording.
+        </p>
+        <p>
+          When you're ready to start recording, enter a participant ID, press
+          Connect, and then enter a download interval of 180 seconds (or as
+          decided by the team). Then hit Record Timestamps.
+        </p>
+        <p>
+          At each interval, a CSV file will be automatically downloaded and
+          prefixed with the participant ID.
+        </p>
+      </Card>
+      <div>
+        <TopBar
+          // Participant ID
+          participantId={participantId}
+          setParticipantId={setParticipantId}
+          // Connection
+          isConnected={isConnected}
+          onConnect={connect}
+          onDisconnect={disconnect}
+          // Epoch recording
+          recordingEpochs={recordingEpochs}
+          onStartRecordingEpochs={() => setRecordingEpochs(Date.now())}
+          onStopRecordingEpochs={stopRecordingEpochs}
+          // Timestamp recording
+          recordingTimestamps={recordingTimestamps}
+          onStartRecordingTimestamps={() => setRecordingTimestamps(Date.now())}
+          onStopRecordingTimestamps={stopRecordingTimestamps}
+          // Spectra recording
+          recordingSpectra={recordingSpectra}
+          onStartRecordingSpectra={() => setRecordingSpectra(Date.now())}
+          onStopRecordingSpectra={stopRecordingSpectra}
+          // Download interval
+          downloadInterval={settings.downloadInterval}
+          onDownloadIntervalChange={(value: number) =>
+            setSettings((prev) => ({ ...prev, downloadInterval: value }))
           }
         />
+        <div className="grid grid-cols-[25rem_1fr] gap-4 w-full">
+          <EpochSliders
+            settings={settings}
+            onSettingChange={(property, value) =>
+              setSettings((prev) => ({ ...prev, [property]: value }))
+            }
+          />
 
-        <EEGChart
-          currentEpoch={showCharts ? currentEpoch : { channels: [] }}
-          channelNames={channelNames}
-          channelColors={channelColors}
-        />
+          <EEGChart
+            currentEpoch={showCharts ? currentEpoch : { channels: [] }}
+            channelNames={channelNames}
+            channelColors={channelColors}
+          />
 
-        <FFTSliders
-          settings={settings}
-          onSettingChange={(property, value) =>
-            setSettings((prev) => ({ ...prev, [property]: value }))
-          }
-        />
-        <SpectraChart
-          currentSpectra={showCharts ? currentSpectra : { channels: [] }}
-          channelNames={channelNames}
-          channelColors={channelColors}
-        />
-      </div>
-      {/* <h2>Timestamps</h2>
+          <FFTSliders
+            settings={settings}
+            onSettingChange={(property, value) =>
+              setSettings((prev) => ({ ...prev, [property]: value }))
+            }
+          />
+          <SpectraChart
+            currentSpectra={showCharts ? currentSpectra : { channels: [] }}
+            channelNames={channelNames}
+            channelColors={channelColors}
+          />
+        </div>
+        {/* <h2>Timestamps</h2>
       <TimestampTable
         timestampData={timestampData}
         channelNames={channelNames}
-        channelColors={channelColors}
-      /> */}
-    </div>
+          channelColors={channelColors}
+        /> */}
+      </div>
+    </>
   );
 }
