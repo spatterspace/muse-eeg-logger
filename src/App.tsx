@@ -143,7 +143,7 @@ export default function App() {
           </li>
         </ul>
         <p>
-          The toggles and the graphs are meant to help you test the device, but
+          The sliders and the graphs are meant to help you test the device, but
           they have no impact on the data recording.
         </p>
         <p>
