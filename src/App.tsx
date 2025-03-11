@@ -123,7 +123,7 @@ export default function App() {
 
   return (
     <>
-      <Card title="Instructions" className="max-w-3xl">
+      <Card title="Instructions" className="max-w-4xl">
         This project has been tested on Chrome on Windows and Mac.
         <ul>
           <li>
