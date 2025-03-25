@@ -127,19 +127,23 @@ export default function App() {
         This project has been tested on Chrome on Windows and Mac.
         <ul>
           <li>
-            To unlock the record buttons, enter the participant ID in the box.
-            If you don't have a participant in mind, enter anything. Then press
-            Connect and use the browser Bluetooth popup to connect to the
+            <b>Change the download folder:</b> go to Chrome settings, then
+            Downloads, then hit Change and select the USB stick.
+          </li>
+          <li>
+            <b>Turn off Chrome's download popups:</b> go to Chrome settings,
+            search "Show downloads when they are done", and disable that.
+          </li>
+          <li>
+            <b>Unlock the record buttons:</b> enter the participant ID in the
+            box. If you don't have a participant in mind, enter anything. Then
+            press Connect and use the browser Bluetooth popup to connect to the
             device.
           </li>
           <li>
-            To force Chrome to allow multiple downloads, set the download
+            <b>Force Chrome to allow multiple downloads:</b> set the download
             interval to 2s and hit Record Timestamps. If Chrome prompts you to
             allow downloading multiple files, click Allow.
-          </li>
-          <li>
-            To turn off Chrome's download popups, go to Chrome Settings, search
-            "Show downloads when they are done", and disable that.
           </li>
         </ul>
         <p>
