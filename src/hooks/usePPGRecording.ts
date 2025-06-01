@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, RefObject } from "react";
 import { Observable, Subscription } from "rxjs";
-import { bandpassFilter } from "@neurosity/pipes";
-import { zipSamples, MuseClient, PPGReading } from "muse-js";
+import { MuseClient, PPGReading } from "muse-js";
 import { downloadCSV } from "../downloadUtils";
 import { formatTimestamp } from "../downloadUtils";
 import { Settings } from "../types.ts";

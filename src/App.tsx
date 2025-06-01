@@ -18,9 +18,7 @@ import { useEpochRecording } from "./hooks/useEpochRecording";
 import { useTimestampRecording } from "./hooks/useTimestampRecording";
 import { Settings } from "./types";
 import { EEGChart } from "./components/EEGChart";
-import { SpectraChart } from "./components/SpectraChart";
 import { useSpectraRecording } from "./hooks/useSpectraRecording";
-import { FFTSliders } from "./components/FFTSliders";
 import { Card } from "primereact/card";
 import { usePPGRecording } from "./hooks/usePPGRecording";
 
@@ -101,21 +99,21 @@ export default function App() {
     participantId
   );
 
-  const { ppgData, recordingPPG, setRecordingPPG, stopRecordingPPG } =
-    usePPGRecording(client, isConnected, settings, participantId);
-
-  const {
-    currentSpectra,
-    recordingSpectra,
-    setRecordingSpectra,
-    stopRecordingSpectra,
-  } = useSpectraRecording(
+  const { recordingPPG, setRecordingPPG, stopRecordingPPG } = usePPGRecording(
     client,
     isConnected,
     settings,
-    channelNames,
     participantId
   );
+
+  const { recordingSpectra, setRecordingSpectra, stopRecordingSpectra } =
+    useSpectraRecording(
+      client,
+      isConnected,
+      settings,
+      channelNames,
+      participantId
+    );
 
   async function connect() {
     await client.current.connect();
