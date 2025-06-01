@@ -22,6 +22,7 @@ import { SpectraChart } from "./components/SpectraChart";
 import { useSpectraRecording } from "./hooks/useSpectraRecording";
 import { FFTSliders } from "./components/FFTSliders";
 import { Card } from "primereact/card";
+import { usePPGRecording } from "./hooks/usePPGRecording";
 
 ChartJS.register(
   LineElement,
@@ -49,10 +50,15 @@ const enableAux = false;
 function createMuseClient() {
   const client = new MuseClient();
   client.enableAux = enableAux;
+  client.enablePpg = true;
   return client;
 }
 
-const channelNames = ["TP9", "AF7", "AF8", "TP10", "AUX"];
+const channelNames = ["TP9", "AF7", "AF8", "TP10"];
+if (enableAux) {
+  channelNames.push("AUX");
+}
+
 const channelColors = [
   "rgba(217,95,2)", // Orange
   "rgba(27,158,119)", // Green
@@ -94,6 +100,9 @@ export default function App() {
     channelNames,
     participantId
   );
+
+  const { ppgData, recordingPPG, setRecordingPPG, stopRecordingPPG } =
+    usePPGRecording(client, isConnected, settings, participantId);
 
   const {
     currentSpectra,
@@ -181,6 +190,10 @@ export default function App() {
           recordingTimestamps={recordingTimestamps}
           onStartRecordingTimestamps={() => setRecordingTimestamps(Date.now())}
           onStopRecordingTimestamps={stopRecordingTimestamps}
+          // PPG recording
+          recordingPPG={recordingPPG}
+          onStartRecordingPPG={() => setRecordingPPG(Date.now())}
+          onStopRecordingPPG={stopRecordingPPG}
           // Spectra recording
           recordingSpectra={recordingSpectra}
           onStartRecordingSpectra={() => setRecordingSpectra(Date.now())}

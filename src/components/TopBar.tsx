@@ -18,6 +18,10 @@ interface TopBarProps {
   recordingTimestamps: number | false;
   onStartRecordingTimestamps: () => void;
   onStopRecordingTimestamps: () => void;
+  // PPG recording
+  recordingPPG: number | false;
+  onStartRecordingPPG: () => void;
+  onStopRecordingPPG: () => void;
   // Spectra recording
   recordingSpectra: number | false;
   onStartRecordingSpectra: () => void;
@@ -42,6 +46,9 @@ export function TopBar({
   recordingTimestamps,
   onStartRecordingTimestamps,
   onStopRecordingTimestamps,
+  recordingPPG,
+  onStartRecordingPPG,
+  onStopRecordingPPG,
   enableCharts,
   onEnableChartsChange,
   downloadInterval,
@@ -100,6 +107,13 @@ TopBarProps) {
         disabled={!participantId.trim() || !isConnected}
         severity={recordingTimestamps ? "danger" : "success"}
       />
+      <Button
+        size="small"
+        label={recordingPPG ? "Stop Recording" : "Record PPG"}
+        onClick={recordingPPG ? onStopRecordingPPG : onStartRecordingPPG}
+        disabled={!participantId.trim() || !isConnected}
+        severity={recordingPPG ? "danger" : "success"}
+      />
       {/* <Button
         size="small"
         label={recordingSpectra ? "Stop Recording Spectra" : "Record Spectra"}
@@ -111,7 +125,7 @@ TopBarProps) {
       /> */}
       <div className="flex items-center gap-2">
         <label htmlFor="enableCharts" className="text-sm">
-          Charts
+          Chart
         </label>
         <InputSwitch
           id="enableCharts"

@@ -64,8 +64,8 @@ export function useEpochRecording(
 
     epochSubscription.current = epochPipe.current.subscribe((data) => {
       const newEpoch = {
-        channels: data.data.map((channel) => ({
-          data: channel,
+        channels: channelNames.map((_, i) => ({
+          data: data.data[i],
           xLabels: generateXTics(settings.srate, settings.duration),
         })),
       };
