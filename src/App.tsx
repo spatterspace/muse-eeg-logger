@@ -209,7 +209,7 @@ export default function App() {
               channelColors={channelColors}
             />
 
-            <FFTSliders
+            {/* <FFTSliders
               settings={settings}
               onSettingChange={(property, value) =>
                 setSettings((prev) => ({ ...prev, [property]: value }))
@@ -219,7 +219,7 @@ export default function App() {
               currentSpectra={currentSpectra}
               channelNames={channelNames}
               channelColors={channelColors}
-            />
+            /> */}
           </div>
         )}
         {/* <h2>Timestamps</h2>
