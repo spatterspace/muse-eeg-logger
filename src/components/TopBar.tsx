@@ -1,5 +1,6 @@
 import { Button } from "primereact/button";
 import { InputNumber } from "primereact/inputnumber";
+import { InputSwitch } from "primereact/inputswitch";
 
 interface TopBarProps {
   // Participant ID
@@ -21,6 +22,9 @@ interface TopBarProps {
   recordingSpectra: number | false;
   onStartRecordingSpectra: () => void;
   onStopRecordingSpectra: () => void;
+  // Enable charts
+  enableCharts: boolean;
+  onEnableChartsChange: (value: boolean) => void;
   // Download interval
   downloadInterval: number;
   onDownloadIntervalChange: (value: number) => void;
@@ -38,6 +42,8 @@ export function TopBar({
   recordingTimestamps,
   onStartRecordingTimestamps,
   onStopRecordingTimestamps,
+  enableCharts,
+  onEnableChartsChange,
   downloadInterval,
   onDownloadIntervalChange,
 }: // recordingSpectra,
@@ -103,6 +109,16 @@ TopBarProps) {
         disabled={!participantId.trim() || !isConnected}
         severity={recordingSpectra ? "danger" : "success"}
       /> */}
+      <div className="flex items-center gap-2">
+        <label htmlFor="enableCharts" className="text-sm">
+          Charts
+        </label>
+        <InputSwitch
+          id="enableCharts"
+          checked={enableCharts}
+          onChange={(e) => onEnableChartsChange(e.value)}
+        />
+      </div>
       <div className="flex items-center gap-2">
         <label htmlFor="downloadInterval" className="text-sm">
           Download Interval (seconds):

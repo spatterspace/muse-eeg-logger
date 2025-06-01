@@ -44,7 +44,7 @@ const initialSettings: Settings = {
   fftBins: 256,
 };
 
-const enableAux = true;
+const enableAux = false;
 
 function createMuseClient() {
   const client = new MuseClient();
@@ -65,6 +65,7 @@ export default function App() {
   const [isConnected, setIsConnected] = useState(false);
   const [settings, setSettings] = useState(initialSettings);
   const [participantId, setParticipantId] = useState("");
+  const [enableCharts, setEnableCharts] = useState(true);
 
   const client = useRef(createMuseClient());
 
@@ -119,7 +120,10 @@ export default function App() {
   }
 
   const showCharts =
-    !recordingEpochs && !recordingTimestamps && !recordingSpectra;
+    enableCharts &&
+    !recordingEpochs &&
+    !recordingTimestamps &&
+    !recordingSpectra;
 
   return (
     <>
@@ -181,38 +185,43 @@ export default function App() {
           recordingSpectra={recordingSpectra}
           onStartRecordingSpectra={() => setRecordingSpectra(Date.now())}
           onStopRecordingSpectra={stopRecordingSpectra}
+          // Enable charts
+          enableCharts={enableCharts}
+          onEnableChartsChange={setEnableCharts}
           // Download interval
           downloadInterval={settings.downloadInterval}
           onDownloadIntervalChange={(value: number) =>
             setSettings((prev) => ({ ...prev, downloadInterval: value }))
           }
         />
-        <div className="grid grid-cols-[25rem_1fr] gap-4 w-full">
-          <EpochSliders
-            settings={settings}
-            onSettingChange={(property, value) =>
-              setSettings((prev) => ({ ...prev, [property]: value }))
-            }
-          />
+        {showCharts && (
+          <div className="grid grid-cols-[25rem_1fr] gap-4 w-full">
+            <EpochSliders
+              settings={settings}
+              onSettingChange={(property, value) =>
+                setSettings((prev) => ({ ...prev, [property]: value }))
+              }
+            />
 
-          <EEGChart
-            currentEpoch={showCharts ? currentEpoch : { channels: [] }}
-            channelNames={channelNames}
-            channelColors={channelColors}
-          />
+            <EEGChart
+              currentEpoch={currentEpoch}
+              channelNames={channelNames}
+              channelColors={channelColors}
+            />
 
-          <FFTSliders
-            settings={settings}
-            onSettingChange={(property, value) =>
-              setSettings((prev) => ({ ...prev, [property]: value }))
-            }
-          />
-          <SpectraChart
-            currentSpectra={showCharts ? currentSpectra : { channels: [] }}
-            channelNames={channelNames}
-            channelColors={channelColors}
-          />
-        </div>
+            <FFTSliders
+              settings={settings}
+              onSettingChange={(property, value) =>
+                setSettings((prev) => ({ ...prev, [property]: value }))
+              }
+            />
+            <SpectraChart
+              currentSpectra={currentSpectra}
+              channelNames={channelNames}
+              channelColors={channelColors}
+            />
+          </div>
+        )}
         {/* <h2>Timestamps</h2>
       <TimestampTable
         timestampData={timestampData}
