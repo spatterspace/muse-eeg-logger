@@ -25,9 +25,9 @@ export function usePPGRecording(
 
     ppgPipe.current = client.current.ppgReadings;
 
-    client.current.ppgReadings.subscribe((x) => {
-      console.log(x);
-    });
+    // client.current.ppgReadings.subscribe((x) => {
+    //   console.log(x);
+    // });
 
     ppgSubscription.current = ppgPipe.current.subscribe((x) => {
       setPPGData((prev) => [...prev, x]);

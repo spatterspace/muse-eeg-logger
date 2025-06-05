@@ -1,5 +1,9 @@
 export function formatTimestamp(timestamp: number): string {
-  return new Date(timestamp).toISOString();
+  const date = new Date(Math.floor(timestamp)); // Drop fractional part
+  const iso = date.toISOString(); // Gives you up to milliseconds
+  const fractional = (timestamp % 1).toFixed(6).slice(2); // Get fractional ms, up to microseconds
+
+  return iso.replace("Z", `.${fractional}Z`);
 }
 
 export function downloadCSV(

@@ -29,9 +29,6 @@ export function useTimestampRecording(
   const timestampPipe = useRef<Observable<TimestampData>>();
   const timestampSubscription = useRef<Subscription>();
 
-  const startDate = Date.now();
-  const startPerformance = performance.now();
-
   useEffect(() => {
     if (timestampSubscription.current)
       timestampSubscription.current.unsubscribe();
@@ -79,12 +76,13 @@ export function useTimestampRecording(
             ppg,
             index: eeg.index,
             timestamp: eeg.timestamp,
-            localTimestamp: performance.now() - startPerformance + startDate,
+            localTimestamp: performance.timeOrigin + performance.now(),
           };
         })
       );
 
     timestampSubscription.current = timestampPipe.current.subscribe((x) => {
+      console.log(performance.timeOrigin + performance.now());
       setTimestampData((prev) => [...prev, x]);
     });
   }, [settings, isConnected, client]);

@@ -20,7 +20,6 @@ import { Settings } from "./types";
 import { EEGChart } from "./components/EEGChart";
 import { useSpectraRecording } from "./hooks/useSpectraRecording";
 import { Card } from "primereact/card";
-import { usePPGRecording } from "./hooks/usePPGRecording";
 
 ChartJS.register(
   LineElement,
@@ -99,12 +98,12 @@ export default function App() {
     participantId
   );
 
-  const { recordingPPG, setRecordingPPG, stopRecordingPPG } = usePPGRecording(
-    client,
-    isConnected,
-    settings,
-    participantId
-  );
+  // const { recordingPPG, setRecordingPPG, stopRecordingPPG } = usePPGRecording(
+  //   client,
+  //   isConnected,
+  //   settings,
+  //   participantId
+  // );
 
   const { recordingSpectra, setRecordingSpectra, stopRecordingSpectra } =
     useSpectraRecording(
