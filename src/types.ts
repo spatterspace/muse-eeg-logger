@@ -1,7 +1,16 @@
 export type TimestampData = {
   data: [ch0: number, ch1: number, ch2: number, ch3: number, ch4: number];
+  ppg: CombinedPPG;
   index: number;
   timestamp: number;
+  localTimestamp: number;
+};
+
+export type CombinedPPG = {
+  index: number;
+  ch0: number[];
+  ch1: number[];
+  ch2: number[];
 };
 
 export type EEGChartData = {

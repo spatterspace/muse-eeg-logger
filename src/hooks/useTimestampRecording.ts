@@ -4,7 +4,15 @@ import { bandpassFilter } from "@neurosity/pipes";
 import { zipSamples, MuseClient } from "muse-js";
 import { downloadCSV } from "../downloadUtils";
 import { formatTimestamp } from "../downloadUtils";
-import { Settings, TimestampData } from "../types.ts";
+import { CombinedPPG, Settings, TimestampData } from "../types.ts";
+import {
+  map,
+  bufferCount,
+  mergeMap,
+  groupBy,
+  filter,
+  withLatestFrom,
+} from "rxjs/operators";
 
 export function useTimestampRecording(
   client: RefObject<MuseClient>,
@@ -21,6 +29,9 @@ export function useTimestampRecording(
   const timestampPipe = useRef<Observable<TimestampData>>();
   const timestampSubscription = useRef<Subscription>();
 
+  const startDate = Date.now();
+  const startPerformance = performance.now();
+
   useEffect(() => {
     if (timestampSubscription.current)
       timestampSubscription.current.unsubscribe();
@@ -28,13 +39,50 @@ export function useTimestampRecording(
 
     setTimestampData([]);
 
-    timestampPipe.current = zipSamples(client.current.eegReadings).pipe(
-      // @ts-expect-error: Type mismatch between RxJS versions
-      bandpassFilter({
-        cutoffFrequencies: [settings.cutOffLow, settings.cutOffHigh],
-        nbChannels: client.current.enableAux ? 5 : 4,
-      })
+    const ppgPipe: Observable<CombinedPPG> = client.current.ppgReadings.pipe(
+      groupBy((sample) => sample.index), // group by index
+      mergeMap((group$) =>
+        group$.pipe(
+          bufferCount(3), // wait for 3 items in the same group (index)
+          // filter(samples => {
+          //   const channels = samples.map(s => s.ppgChannel);
+          //   return [0, 1, 2].every(c => channels.includes(c));
+          // }),
+          map((samples) => {
+            const byChannel = Object.fromEntries(
+              samples.map((s) => [s.ppgChannel, s])
+            );
+            return {
+              index: samples[0].index,
+              ch0: byChannel[0].samples,
+              ch1: byChannel[1].samples,
+              ch2: byChannel[2].samples,
+            };
+          })
+        )
+      )
     );
+
+    timestampPipe.current = zipSamples(client.current.eegReadings)
+      .pipe(
+        // @ts-expect-error: Type mismatch between RxJS versions
+        bandpassFilter({
+          cutoffFrequencies: [settings.cutOffLow, settings.cutOffHigh],
+          nbChannels: client.current.enableAux ? 5 : 4,
+        })
+      )
+      .pipe(
+        withLatestFrom(ppgPipe),
+        map(([eeg, ppg]) => {
+          return {
+            data: eeg.data.slice(0, channelNames.length),
+            ppg,
+            index: eeg.index,
+            timestamp: eeg.timestamp,
+            localTimestamp: performance.now() - startPerformance + startDate,
+          };
+        })
+      );
 
     timestampSubscription.current = timestampPipe.current.subscribe((x) => {
       setTimestampData((prev) => [...prev, x]);
@@ -42,14 +90,29 @@ export function useTimestampRecording(
   }, [settings, isConnected, client]);
 
   const printTimestamps = async () => {
-    const header = ["Timestamp", "Time String", ...channelNames];
+    const header = [
+      "Local Timestamp",
+      "Local Time String",
+      "Headset Timestamp",
+      "Headset Time String",
+      ...channelNames,
+      "PPG Index",
+      [0, 1, 2].flatMap((ch) => [0, 1, 2, 3, 4, 5].map((i) => `ch${ch}s${i}`)),
+    ];
 
     const lines = [...timestampData].map((reading) => {
-      const timeString = formatTimestamp(reading.timestamp);
+      const deviceTimeString = formatTimestamp(reading.timestamp);
+      const localTimeString = formatTimestamp(reading.localTimestamp);
       return [
+        reading.localTimestamp,
+        localTimeString,
         reading.timestamp,
-        timeString,
+        deviceTimeString,
         ...reading.data.map((value) => value.toFixed(2)),
+        reading.ppg.index,
+        ...reading.ppg.ch0.map((value) => value.toFixed(2)),
+        ...reading.ppg.ch1.map((value) => value.toFixed(2)),
+        ...reading.ppg.ch2.map((value) => value.toFixed(2)),
       ].join(",");
     });
 

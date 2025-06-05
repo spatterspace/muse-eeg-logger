@@ -188,10 +188,6 @@ export default function App() {
           recordingTimestamps={recordingTimestamps}
           onStartRecordingTimestamps={() => setRecordingTimestamps(Date.now())}
           onStopRecordingTimestamps={stopRecordingTimestamps}
-          // PPG recording
-          recordingPPG={recordingPPG}
-          onStartRecordingPPG={() => setRecordingPPG(Date.now())}
-          onStopRecordingPPG={stopRecordingPPG}
           // Spectra recording
           recordingSpectra={recordingSpectra}
           onStartRecordingSpectra={() => setRecordingSpectra(Date.now())}
