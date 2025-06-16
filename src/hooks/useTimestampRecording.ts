@@ -132,7 +132,12 @@ export function useTimestampRecording(
         setRecordingTimestamps(Date.now());
       }
     }
-  }, [timestampData, settings.downloadInterval, participantId]);
+  }, [
+    timestampData,
+    settings.downloadInterval,
+    participantId,
+    recordingTimestamps,
+  ]);
 
   const stopRecordingTimestamps = async () => {
     await printTimestamps();
