@@ -129,7 +129,6 @@ TopBarProps) {
           value={downloadInterval}
           onValueChange={(e) => onDownloadIntervalChange(e.value ?? 1)}
           min={1}
-          max={500}
           disabled={!!recordingEpochs}
           className="w-20"
           size={5}
