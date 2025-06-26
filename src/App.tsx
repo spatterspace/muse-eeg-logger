@@ -244,13 +244,19 @@ export default function App() {
                   <div>
                     <span className="font-medium">Voltage:</span>{" "}
                     {telemetryData?.fuelGaugeVoltage != null
-                      ? `${telemetryData.fuelGaugeVoltage.toFixed(2)} V`
+                      ? `${telemetryData.fuelGaugeVoltage} V`
                       : "-"}
                   </div>
                   <div>
                     <span className="font-medium">Temperature:</span>{" "}
                     {telemetryData?.temperature != null
-                      ? `${telemetryData.temperature.toFixed(1)} °C`
+                      ? `${telemetryData.temperature} °C`
+                      : "-"}
+                  </div>
+                  <div>
+                    <span className="font-medium">Sequence ID:</span>{" "}
+                    {telemetryData?.sequenceId != null
+                      ? `${telemetryData.sequenceId}`
                       : "-"}
                   </div>
                 </div>
