@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, RefObject } from "react";
 import { MuseClient, MuseDeviceInfo } from "muse-js";
 
-const POLL_INTERVAL = 1000;
+const POLL_INTERVAL = 500;
 
 export function useDeviceInfo(
   client: RefObject<MuseClient>,

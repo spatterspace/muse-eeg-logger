@@ -9,7 +9,6 @@ export function useTelemetry(
   const [telemetryData, setTelemetryData] = useState<TelemetryData | null>(
     null
   );
-  const [error, setError] = useState<string | null>(null);
   const telemetrySubscription = useRef<Subscription>();
 
   useEffect(() => {
@@ -18,34 +17,14 @@ export function useTelemetry(
     }
     if (!isConnected || !client.current) {
       setTelemetryData(null);
-      setError(null);
       return;
     }
 
-    try {
-      // Subscribe to telemetry data
-      telemetrySubscription.current = client.current.telemetryData.subscribe({
-        next: (data: TelemetryData) => {
-          setTelemetryData(data);
-          setError(null);
-        },
-        error: (err: unknown) => {
-          if (err instanceof Error) {
-            setError(err.message);
-          } else {
-            setError("Failed to get telemetry data");
-          }
-          console.error("Error getting telemetry data:", err);
-        },
-      });
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("Failed to subscribe to telemetry");
+    telemetrySubscription.current = client.current.telemetryData.subscribe(
+      (data: TelemetryData) => {
+        setTelemetryData(data);
       }
-      console.error("Error subscribing to telemetry:", err);
-    }
+    );
 
     return () => {
       if (telemetrySubscription.current) {
@@ -56,7 +35,6 @@ export function useTelemetry(
 
   return {
     telemetryData,
-    error,
-    isLoading: isConnected && !telemetryData && !error,
+    isLoading: isConnected && !telemetryData,
   };
 }

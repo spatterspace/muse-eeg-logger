@@ -19,9 +19,9 @@ interface TopBarProps {
   onStartRecordingTimestamps: () => void;
   onStopRecordingTimestamps: () => void;
   // Spectra recording
-  recordingSpectra: number | false;
-  onStartRecordingSpectra: () => void;
-  onStopRecordingSpectra: () => void;
+  // recordingSpectra: number | false;
+  // onStartRecordingSpectra: () => void;
+  // onStopRecordingSpectra: () => void;
   // Enable charts
   enableCharts: boolean;
   onEnableChartsChange: (value: boolean) => void;

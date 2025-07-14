@@ -12,15 +12,14 @@ import {
   Legend,
 } from "chart.js";
 import { EpochSliders } from "./components/EpochSliders";
-// import { TimestampTable } from "./components/TimestampTable";
 import { TopBar } from "./components/TopBar";
 import { useEpochRecording } from "./hooks/useEpochRecording";
 import { useTimestampRecording } from "./hooks/useTimestampRecording";
 import { useDeviceInfo } from "./hooks/useDeviceInfo";
 import { useTelemetry } from "./hooks/useTelemetry";
+import { useAudioAlert } from "./hooks/useAudioAlert";
 import { Settings } from "./types";
 import { EEGChart } from "./components/EEGChart";
-import { useSpectraRecording } from "./hooks/useSpectraRecording";
 import { Card } from "primereact/card";
 
 ChartJS.register(
@@ -74,17 +73,23 @@ export default function App() {
 
   const client = useRef(createMuseClient());
 
+  // useDeviceInfo polls the device at an interval to get the device info - this primarily is used to check if the device is still connected
   const {
     deviceInfo,
     error: deviceError,
     isLoading: deviceLoading,
   } = useDeviceInfo(client, isConnected);
-  const {
-    telemetryData,
-    error: telemetryError,
-    isLoading: telemetryLoading,
-  } = useTelemetry(client, isConnected);
 
+  // Audio feedback for device errors
+  useAudioAlert(deviceError);
+
+  // telemeteryData includes battery level, voltage, and temperature
+  const { telemetryData, isLoading: telemetryLoading } = useTelemetry(
+    client,
+    isConnected
+  );
+
+  // used for graphing - same logic as EEGEdu
   const {
     currentEpoch,
     recordingEpochs,
@@ -111,21 +116,14 @@ export default function App() {
     participantId
   );
 
-  // const { recordingPPG, setRecordingPPG, stopRecordingPPG } = usePPGRecording(
-  //   client,
-  //   isConnected,
-  //   settings,
-  //   participantId
-  // );
-
-  const { recordingSpectra, setRecordingSpectra, stopRecordingSpectra } =
-    useSpectraRecording(
-      client,
-      isConnected,
-      settings,
-      channelNames,
-      participantId
-    );
+  // const { recordingSpectra, setRecordingSpectra, stopRecordingSpectra } =
+  //   useSpectraRecording(
+  //     client,
+  //     isConnected,
+  //     settings,
+  //     channelNames,
+  //     participantId
+  //   );
 
   async function connect() {
     await client.current.connect();
@@ -138,11 +136,8 @@ export default function App() {
     setIsConnected(false);
   }
 
-  const showCharts =
-    enableCharts &&
-    !recordingEpochs &&
-    !recordingTimestamps &&
-    !recordingSpectra;
+  const showCharts = enableCharts && !recordingEpochs && !recordingTimestamps;
+  // !recordingSpectra;
 
   return (
     <>
@@ -189,11 +184,7 @@ export default function App() {
           {(deviceLoading || telemetryLoading) && (
             <p>Loading device information...</p>
           )}
-          {(deviceError || telemetryError) && (
-            <p className="text-red-500">
-              Error: {deviceError || telemetryError}
-            </p>
-          )}
+          {deviceError && <p className="text-red-500">Error: {deviceError}</p>}
           {(deviceInfo || telemetryData) && (
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -284,9 +275,9 @@ export default function App() {
           onStartRecordingTimestamps={() => setRecordingTimestamps(Date.now())}
           onStopRecordingTimestamps={stopRecordingTimestamps}
           // Spectra recording
-          recordingSpectra={recordingSpectra}
-          onStartRecordingSpectra={() => setRecordingSpectra(Date.now())}
-          onStopRecordingSpectra={stopRecordingSpectra}
+          // recordingSpectra={recordingSpectra}
+          // onStartRecordingSpectra={() => setRecordingSpectra(Date.now())}
+          // onStopRecordingSpectra={stopRecordingSpectra}
           // Enable charts
           enableCharts={enableCharts}
           onEnableChartsChange={setEnableCharts}
