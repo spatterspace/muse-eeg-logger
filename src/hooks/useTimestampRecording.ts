@@ -86,6 +86,12 @@ export function useTimestampRecording(
     });
   }, [settings, isConnected, client]);
 
+  useEffect(() => {
+    if (recordingTimestamps) {
+      setTimestampData([]);
+    }
+  }, [recordingTimestamps]);
+
   const printTimestamps = async () => {
     const header = [
       "Local Timestamp",
