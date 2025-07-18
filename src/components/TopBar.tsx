@@ -1,6 +1,5 @@
 import { Button } from "primereact/button";
 import { InputNumber } from "primereact/inputnumber";
-import { InputSwitch } from "primereact/inputswitch";
 
 interface TopBarProps {
   // Participant ID
@@ -10,21 +9,10 @@ interface TopBarProps {
   isConnected: boolean;
   onConnect: () => void;
   onDisconnect: () => void;
-  // Epoch recording
-  recordingEpochs: number | false;
-  onStartRecordingEpochs: () => void;
-  onStopRecordingEpochs: () => void;
   // Timestamp recording
   recordingTimestamps: number | false;
   onStartRecordingTimestamps: () => void;
   onStopRecordingTimestamps: () => void;
-  // Spectra recording
-  // recordingSpectra: number | false;
-  // onStartRecordingSpectra: () => void;
-  // onStopRecordingSpectra: () => void;
-  // Enable charts
-  enableCharts: boolean;
-  onEnableChartsChange: (value: boolean) => void;
   // Download interval
   downloadInterval: number;
   onDownloadIntervalChange: (value: number) => void;
@@ -36,20 +24,12 @@ export function TopBar({
   isConnected,
   onConnect,
   onDisconnect,
-  recordingEpochs,
-  // onStartRecordingEpochs,
-  // onStopRecordingEpochs,
   recordingTimestamps,
   onStartRecordingTimestamps,
   onStopRecordingTimestamps,
-  enableCharts,
-  onEnableChartsChange,
   downloadInterval,
   onDownloadIntervalChange,
-}: // recordingSpectra,
-// onStartRecordingSpectra,
-// onStopRecordingSpectra,
-TopBarProps) {
+}: TopBarProps) {
   return (
     <div className="flex items-center gap-4 mb-4">
       <div className="flex items-center gap-2">
@@ -101,25 +81,6 @@ TopBarProps) {
         severity={recordingTimestamps ? "danger" : "success"}
       />
 
-      {/* <Button
-        size="small"
-        label={recordingSpectra ? "Stop Recording Spectra" : "Record Spectra"}
-        onClick={
-          recordingSpectra ? onStopRecordingSpectra : onStartRecordingSpectra
-        }
-        disabled={!participantId.trim() || !isConnected}
-        severity={recordingSpectra ? "danger" : "success"}
-      /> */}
-      <div className="flex items-center gap-2">
-        <label htmlFor="enableCharts" className="text-sm">
-          Chart
-        </label>
-        <InputSwitch
-          id="enableCharts"
-          checked={enableCharts}
-          onChange={(e) => onEnableChartsChange(e.value)}
-        />
-      </div>
       <div className="flex items-center gap-2">
         <label htmlFor="downloadInterval" className="text-sm">
           Download Interval (seconds):
@@ -129,7 +90,7 @@ TopBarProps) {
           value={downloadInterval}
           onValueChange={(e) => onDownloadIntervalChange(e.value ?? 1)}
           min={1}
-          disabled={!!recordingEpochs}
+          disabled={!!recordingTimestamps}
           className="w-20"
           size={5}
           useGrouping={false}

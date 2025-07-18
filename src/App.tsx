@@ -15,12 +15,16 @@ import { EpochSliders } from "./components/EpochSliders";
 import { TopBar } from "./components/TopBar";
 import { useEpochRecording } from "./hooks/useEpochRecording";
 import { useTimestampRecording } from "./hooks/useTimestampRecording";
+import { useSpectraRecording } from "./hooks/useSpectraRecording";
 import { useDeviceInfo } from "./hooks/useDeviceInfo";
 import { useTelemetry } from "./hooks/useTelemetry";
 import { useAudioAlert } from "./hooks/useAudioAlert";
 import { Settings } from "./types";
 import { EEGChart } from "./components/EEGChart";
+import { SpectraChart } from "./components/SpectraChart";
+import { FFTSliders } from "./components/FFTSliders";
 import { Card } from "primereact/card";
+import { InputSwitch } from "primereact/inputswitch";
 
 ChartJS.register(
   LineElement,
@@ -69,7 +73,8 @@ export default function App() {
   const [isConnected, setIsConnected] = useState(false);
   const [settings, setSettings] = useState(initialSettings);
   const [participantId, setParticipantId] = useState("");
-  const [enableCharts, setEnableCharts] = useState(true);
+  const [enableEEGChart, setEnableEEGChart] = useState(true);
+  const [enableSpectraChart, setEnableSpectraChart] = useState(false);
 
   const client = useRef(createMuseClient());
 
@@ -90,12 +95,7 @@ export default function App() {
   );
 
   // used for graphing - same logic as EEGEdu
-  const {
-    currentEpoch,
-    recordingEpochs,
-    setRecordingEpochs,
-    stopRecordingEpochs,
-  } = useEpochRecording(
+  const { currentEpoch } = useEpochRecording(
     client,
     isConnected,
     settings,
@@ -116,14 +116,13 @@ export default function App() {
     participantId
   );
 
-  // const { recordingSpectra, setRecordingSpectra, stopRecordingSpectra } =
-  //   useSpectraRecording(
-  //     client,
-  //     isConnected,
-  //     settings,
-  //     channelNames,
-  //     participantId
-  //   );
+  const { currentSpectra } = useSpectraRecording(
+    client,
+    isConnected,
+    settings,
+    channelNames,
+    participantId
+  );
 
   async function connect() {
     await client.current.connect();
@@ -135,9 +134,6 @@ export default function App() {
     await client.current.disconnect();
     setIsConnected(false);
   }
-
-  const showCharts = enableCharts && !recordingEpochs && !recordingTimestamps;
-  // !recordingSpectra;
 
   return (
     <>
@@ -266,55 +262,76 @@ export default function App() {
           isConnected={isConnected}
           onConnect={connect}
           onDisconnect={disconnect}
-          // Epoch recording
-          recordingEpochs={recordingEpochs}
-          onStartRecordingEpochs={() => setRecordingEpochs(Date.now())}
-          onStopRecordingEpochs={stopRecordingEpochs}
           // Timestamp recording
           recordingTimestamps={recordingTimestamps}
-          onStartRecordingTimestamps={() => setRecordingTimestamps(Date.now())}
+          onStartRecordingTimestamps={() => {
+            setRecordingTimestamps(Date.now());
+            setEnableEEGChart(false);
+            setEnableSpectraChart(false);
+          }}
           onStopRecordingTimestamps={stopRecordingTimestamps}
-          // Spectra recording
-          // recordingSpectra={recordingSpectra}
-          // onStartRecordingSpectra={() => setRecordingSpectra(Date.now())}
-          // onStopRecordingSpectra={stopRecordingSpectra}
-          // Enable charts
-          enableCharts={enableCharts}
-          onEnableChartsChange={setEnableCharts}
           // Download interval
           downloadInterval={settings.downloadInterval}
           onDownloadIntervalChange={(value: number) =>
             setSettings((prev) => ({ ...prev, downloadInterval: value }))
           }
         />
-        {showCharts && (
-          <div className="grid grid-cols-[25rem_1fr] gap-4 w-full">
-            <EpochSliders
-              settings={settings}
-              onSettingChange={(property, value) =>
-                setSettings((prev) => ({ ...prev, [property]: value }))
-              }
-            />
+        <>
+          <div className="grid grid-cols-[25rem_1fr] gap-4 w-full p-4">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <InputSwitch
+                  checked={enableEEGChart}
+                  onChange={(e) => setEnableEEGChart(e.value)}
+                />
+                <h2>Epoch Chart</h2>
+              </div>
+              {enableEEGChart && (
+                <EpochSliders
+                  settings={settings}
+                  onSettingChange={(property, value) =>
+                    setSettings((prev) => ({ ...prev, [property]: value }))
+                  }
+                />
+              )}
+            </div>
 
-            <EEGChart
-              currentEpoch={currentEpoch}
-              channelNames={channelNames}
-              channelColors={channelColors}
-            />
-
-            {/* <FFTSliders
-              settings={settings}
-              onSettingChange={(property, value) =>
-                setSettings((prev) => ({ ...prev, [property]: value }))
-              }
-            />
-            <SpectraChart
-              currentSpectra={currentSpectra}
-              channelNames={channelNames}
-              channelColors={channelColors}
-            /> */}
+            {enableEEGChart && (
+              <EEGChart
+                currentEpoch={currentEpoch}
+                channelNames={channelNames}
+                channelColors={channelColors}
+              />
+            )}
           </div>
-        )}
+
+          <div className="grid grid-cols-[25rem_1fr] gap-4 w-full p-4">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <InputSwitch
+                  checked={enableSpectraChart}
+                  onChange={(e) => setEnableSpectraChart(e.value)}
+                />
+                <h2>Spectra Chart</h2>
+              </div>
+              {enableSpectraChart && (
+                <FFTSliders
+                  settings={settings}
+                  onSettingChange={(property, value) =>
+                    setSettings((prev) => ({ ...prev, [property]: value }))
+                  }
+                />
+              )}
+            </div>
+            {enableSpectraChart && (
+              <SpectraChart
+                currentSpectra={currentSpectra}
+                channelNames={channelNames}
+                channelColors={channelColors}
+              />
+            )}
+          </div>
+        </>
         {/* <h2>Timestamps</h2>
       <TimestampTable
         timestampData={timestampData}

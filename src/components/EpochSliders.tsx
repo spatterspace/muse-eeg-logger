@@ -17,8 +17,7 @@ type EpochSlidersProps = {
 
 export function EpochSliders({ settings, onSettingChange }: EpochSlidersProps) {
   return (
-    <div className="p-4 flex flex-col gap-4">
-      <h2>Chart Settings</h2>
+    <div className="flex flex-col gap-4">
       <div>
         <label htmlFor="duration" className="block mb-2">
           Epoch Duration (Sampling Points): {settings.duration}

@@ -8,7 +8,7 @@ interface FFTSlidersProps {
 
 export function FFTSliders({ settings, onSettingChange }: FFTSlidersProps) {
   return (
-    <div className="p-4 flex flex-col gap-4">
+    <div className="flex flex-col gap-4">
       <div>
         <label htmlFor="sliceFFTLow" className="block mb-2">
           FFT Low Cutoff: {settings.sliceFFTLow} Hz
