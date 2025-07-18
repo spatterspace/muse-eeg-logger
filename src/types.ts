@@ -8,6 +8,7 @@ export type TimestampData = {
 
 export type CombinedPPG = {
   index: number;
+  timestamp: number; // This doesn't update enough, so we don't use it
   ch0: number[];
   ch1: number[];
   ch2: number[];

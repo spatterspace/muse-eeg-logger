@@ -40,16 +40,19 @@ export function useTimestampRecording(
       mergeMap((group$) =>
         group$.pipe(
           bufferCount(3), // wait for 3 items in the same group (index)
-          // filter(samples => {
-          //   const channels = samples.map(s => s.ppgChannel);
-          //   return [0, 1, 2].every(c => channels.includes(c));
-          // }),
           map((samples) => {
             const byChannel = Object.fromEntries(
               samples.map((s) => [s.ppgChannel, s])
             );
+            // The samples at the same index have the same timestamps:
+            // console.log(
+            //   samples[0].timestamp,
+            //   samples[1].timestamp,
+            //   samples[2].timestamp
+            // );
             return {
               index: samples[0].index,
+              timestamp: samples[0].timestamp, // This doesn't update enough, so we don't use it; here for debugging reasons
               ch0: byChannel[0].samples,
               ch1: byChannel[1].samples,
               ch2: byChannel[2].samples,
@@ -70,6 +73,7 @@ export function useTimestampRecording(
       .pipe(
         withLatestFrom(ppgPipe),
         map(([eeg, ppg]) => {
+          // console.log(eeg.timestamp, ppg.timestamp);
           return {
             data: eeg.data.slice(0, channelNames.length),
             ppg,
@@ -81,7 +85,6 @@ export function useTimestampRecording(
       );
 
     timestampSubscription.current = timestampPipe.current.subscribe((x) => {
-      console.log(performance.timeOrigin + performance.now());
       setTimestampData((prev) => [...prev, x]);
     });
   }, [settings, isConnected, client]);

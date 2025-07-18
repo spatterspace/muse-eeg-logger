@@ -24,7 +24,6 @@ import { EEGChart } from "./components/EEGChart";
 import { SpectraChart } from "./components/SpectraChart";
 import { FFTSliders } from "./components/FFTSliders";
 import { Card } from "primereact/card";
-import { InputSwitch } from "primereact/inputswitch";
 
 ChartJS.register(
   LineElement,
@@ -73,8 +72,8 @@ export default function App() {
   const [isConnected, setIsConnected] = useState(false);
   const [settings, setSettings] = useState(initialSettings);
   const [participantId, setParticipantId] = useState("");
-  const [enableEEGChart, setEnableEEGChart] = useState(true);
-  const [enableSpectraChart, setEnableSpectraChart] = useState(false);
+  const [isEpochChartOpen, setIsEpochChartOpen] = useState(true);
+  const [isSpectraChartOpen, setIsSpectraChartOpen] = useState(false);
 
   const client = useRef(createMuseClient());
 
@@ -273,8 +272,8 @@ export default function App() {
           recordingTimestamps={recordingTimestamps}
           onStartRecordingTimestamps={() => {
             setRecordingTimestamps(Date.now());
-            setEnableEEGChart(false);
-            setEnableSpectraChart(false);
+            setIsEpochChartOpen(false);
+            setIsSpectraChartOpen(false);
           }}
           onStopRecordingTimestamps={stopRecordingTimestamps}
           // Download interval
@@ -284,60 +283,59 @@ export default function App() {
           }
         />
         <>
-          <div className="grid grid-cols-[25rem_1fr] gap-4 w-full">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <InputSwitch
-                  checked={enableEEGChart}
-                  onChange={(e) => setEnableEEGChart(e.value)}
+          <details
+            className="max-w-4xl mb-4"
+            open={isEpochChartOpen}
+            onToggle={(e) => setIsEpochChartOpen(e.currentTarget.open)}
+          >
+            <summary className="text-lg font-semibold cursor-pointer rounded-t-lg">
+              Epoch Chart
+            </summary>
+            <div className="p-4">
+              <div className="grid grid-cols-[25rem_1fr] gap-4 w-full">
+                <div>
+                  <EpochSliders
+                    settings={settings}
+                    onSettingChange={(property, value) =>
+                      setSettings((prev) => ({ ...prev, [property]: value }))
+                    }
+                  />
+                </div>
+                <EEGChart
+                  currentEpoch={currentEpoch}
+                  channelNames={channelNames}
+                  channelColors={channelColors}
                 />
-                <h2>Epoch Chart</h2>
               </div>
-              {enableEEGChart && (
-                <EpochSliders
-                  settings={settings}
-                  onSettingChange={(property, value) =>
-                    setSettings((prev) => ({ ...prev, [property]: value }))
-                  }
-                />
-              )}
             </div>
+          </details>
 
-            {enableEEGChart && (
-              <EEGChart
-                currentEpoch={currentEpoch}
-                channelNames={channelNames}
-                channelColors={channelColors}
-              />
-            )}
-          </div>
-
-          <div className="grid grid-cols-[25rem_1fr] gap-4 w-full">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <InputSwitch
-                  checked={enableSpectraChart}
-                  onChange={(e) => setEnableSpectraChart(e.value)}
+          <details
+            className="max-w-4xl mb-4"
+            open={isSpectraChartOpen}
+            onToggle={(e) => setIsSpectraChartOpen(e.currentTarget.open)}
+          >
+            <summary className="text-lg font-semibold cursor-pointer rounded-t-lg">
+              Spectra Chart
+            </summary>
+            <div className="p-4">
+              <div className="grid grid-cols-[25rem_1fr] gap-4 w-full">
+                <div>
+                  <FFTSliders
+                    settings={settings}
+                    onSettingChange={(property, value) =>
+                      setSettings((prev) => ({ ...prev, [property]: value }))
+                    }
+                  />
+                </div>
+                <SpectraChart
+                  currentSpectra={currentSpectra}
+                  channelNames={channelNames}
+                  channelColors={channelColors}
                 />
-                <h2>Spectra Chart</h2>
               </div>
-              {enableSpectraChart && (
-                <FFTSliders
-                  settings={settings}
-                  onSettingChange={(property, value) =>
-                    setSettings((prev) => ({ ...prev, [property]: value }))
-                  }
-                />
-              )}
             </div>
-            {enableSpectraChart && (
-              <SpectraChart
-                currentSpectra={currentSpectra}
-                channelNames={channelNames}
-                channelColors={channelColors}
-              />
-            )}
-          </div>
+          </details>
         </>
         {/* <h2>Timestamps</h2>
       <TimestampTable
