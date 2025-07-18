@@ -136,44 +136,51 @@ export default function App() {
   }
 
   return (
-    <>
-      <Card title="Instructions" className="max-w-4xl">
-        This project has been tested on Chrome on Windows and Mac.
-        <ul>
-          <li>
-            <b>Change the download folder:</b> go to Chrome settings, then
-            Downloads, then hit Change and select the USB stick.
-          </li>
-          <li>
-            <b>Turn off Chrome's download popups:</b> go to Chrome settings,
-            search "Show downloads when they are done", and disable that.
-          </li>
-          <li>
-            <b>Unlock the record buttons:</b> enter the participant ID in the
-            box. If you don't have a participant in mind, enter anything. Then
-            press Connect and use the browser Bluetooth popup to connect to the
-            device.
-          </li>
-          <li>
-            <b>Force Chrome to allow multiple downloads:</b> set the download
-            interval to 2s and hit Record Timestamps. If Chrome prompts you to
-            allow downloading multiple files, click Allow.
-          </li>
-        </ul>
-        <p>
-          The sliders and the graphs are meant to help you test the device, but
-          they have no impact on the data recording.
-        </p>
-        <p>
-          When you're ready to start recording, enter a participant ID, press
-          Connect, and then enter a download interval of 180 seconds (or as
-          decided by the team). Then hit Record Timestamps.
-        </p>
-        <p>
-          At each interval, a CSV file will be automatically downloaded and
-          prefixed with the participant ID.
-        </p>
-      </Card>
+    <div className="p-4">
+      <details className="max-w-4xl mb-4">
+        <summary className="text-lg font-semibold cursor-pointer rounded-t-lg">
+          Instructions
+        </summary>
+        <div className="p-4">
+          <p className="mb-4">
+            This project has been tested on Chrome on Windows and Mac.
+          </p>
+          <ul className="space-y-2 mb-4">
+            <li>
+              <b>Change the download folder:</b> go to Chrome settings, then
+              Downloads, then hit Change and select the USB stick.
+            </li>
+            <li>
+              <b>Turn off Chrome's download popups:</b> go to Chrome settings,
+              search "Show downloads when they are done", and disable that.
+            </li>
+            <li>
+              <b>Unlock the record buttons:</b> enter the participant ID in the
+              box. If you don't have a participant in mind, enter anything. Then
+              press Connect and use the browser Bluetooth popup to connect to
+              the device.
+            </li>
+            <li>
+              <b>Force Chrome to allow multiple downloads:</b> set the download
+              interval to 2s and hit Record Timestamps. If Chrome prompts you to
+              allow downloading multiple files, click Allow.
+            </li>
+          </ul>
+          <p className="mb-2">
+            The sliders and the graphs are meant to help you test the device,
+            but they have no impact on the data recording.
+          </p>
+          <p className="mb-2">
+            When you're ready to start recording, enter a participant ID, press
+            Connect, and then enter a download interval of 180 seconds (or as
+            decided by the team). Then hit Record Timestamps.
+          </p>
+          <p>
+            At each interval, a CSV file will be automatically downloaded and
+            prefixed with the participant ID.
+          </p>
+        </div>
+      </details>
 
       {isConnected && (
         <Card title="Device Information" className="max-w-4xl mb-4">
@@ -277,7 +284,7 @@ export default function App() {
           }
         />
         <>
-          <div className="grid grid-cols-[25rem_1fr] gap-4 w-full p-4">
+          <div className="grid grid-cols-[25rem_1fr] gap-4 w-full">
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <InputSwitch
@@ -305,7 +312,7 @@ export default function App() {
             )}
           </div>
 
-          <div className="grid grid-cols-[25rem_1fr] gap-4 w-full p-4">
+          <div className="grid grid-cols-[25rem_1fr] gap-4 w-full">
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <InputSwitch
@@ -339,6 +346,6 @@ export default function App() {
           channelColors={channelColors}
         /> */}
       </div>
-    </>
+    </div>
   );
 }
