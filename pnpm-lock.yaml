@@ -15,8 +15,8 @@ dependencies:
     specifier: ^4.4.7
     version: 4.4.7
   muse-js:
-    specifier: file:../muse-js
-    version: file:../muse-js
+    specifier: ^3.3.0
+    version: link:../muse-js
   primereact:
     specifier: ^10.9.2
     version: 10.9.6(@types/react@18.3.18)(react-dom@18.3.1)(react@18.3.1)
@@ -949,10 +949,6 @@ packages:
     dependencies:
       '@types/prop-types': 15.7.14
       csstype: 3.1.3
-
-  /@types/web-bluetooth@0.0.2:
-    resolution: {integrity: sha512-E3/gvUxuBxtsLVNZLNr0ATDoWC+QHMIjJvP94CtApCDDM+db4kII+Ci5cWF2At8OQ9Wq1fd1x1c245oL4uD94w==}
-    dev: false
 
   /@typescript-eslint/eslint-plugin@8.22.0(@typescript-eslint/parser@8.22.0)(eslint@9.19.0)(typescript@5.6.3):
     resolution: {integrity: sha512-4Uta6REnz/xEJMvwf72wdUnC3rr4jAQf5jnTkeRQ9b6soxLxhDEbS/pfMPoJLDfFPNVRdryqWUIV/2GZzDJFZw==}
@@ -2199,11 +2195,3 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
     dev: true
-
-  file:../muse-js:
-    resolution: {directory: ../muse-js, type: directory}
-    name: muse-js
-    dependencies:
-      '@types/web-bluetooth': 0.0.2
-      rxjs: 6.6.7
-    dev: false

@@ -24,6 +24,7 @@ import { EEGChart } from "./components/EEGChart";
 import { SpectraChart } from "./components/SpectraChart";
 import { FFTSliders } from "./components/FFTSliders";
 import { Card } from "primereact/card";
+import { TimestampTable } from "./components/TimestampTable";
 
 ChartJS.register(
   LineElement,
@@ -337,12 +338,6 @@ export default function App() {
             </div>
           </details>
         </>
-        {/* <h2>Timestamps</h2>
-      <TimestampTable
-        timestampData={timestampData}
-        channelNames={channelNames}
-          channelColors={channelColors}
-        /> */}
       </div>
     </div>
   );

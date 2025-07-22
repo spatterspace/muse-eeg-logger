@@ -25,6 +25,7 @@ export function useTimestampRecording(
     number | false
   >(false);
 
+  // TODO: see if this works without a ref, like the ppg pipe
   const timestampPipe = useRef<Observable<TimestampData>>();
   const timestampSubscription = useRef<Subscription>();
 
@@ -116,11 +117,11 @@ export function useTimestampRecording(
         reading.timestamp,
         deviceTimeString,
         reading.index,
-        ...reading.data.map((value) => value.toFixed(2)),
+        ...reading.data,
         reading.ppg.index,
-        ...reading.ppg.ch0.map((value) => value.toFixed(2)),
-        ...reading.ppg.ch1.map((value) => value.toFixed(2)),
-        ...reading.ppg.ch2.map((value) => value.toFixed(2)),
+        ...reading.ppg.ch0,
+        ...reading.ppg.ch1,
+        ...reading.ppg.ch2,
       ].join(",");
     });
 
