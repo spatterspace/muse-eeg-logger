@@ -13,9 +13,9 @@ import {
 } from "chart.js";
 import { EpochSliders } from "./components/EpochSliders";
 import { TopBar } from "./components/TopBar";
-import { useEpochRecording } from "./hooks/useEpochRecording";
+import { useEpochGraphData } from "./hooks/useEpochGraphData";
 import { useTimestampRecording } from "./hooks/useTimestampRecording";
-import { useSpectraRecording } from "./hooks/useSpectraRecording";
+import { useSpectraGraphData } from "./hooks/useSpectraGraphData";
 import { useDeviceInfo } from "./hooks/useDeviceInfo";
 import { useTelemetry } from "./hooks/useTelemetry";
 import { useAudioAlert } from "./hooks/useAudioAlert";
@@ -24,7 +24,6 @@ import { EEGChart } from "./components/EEGChart";
 import { SpectraChart } from "./components/SpectraChart";
 import { FFTSliders } from "./components/FFTSliders";
 import { Card } from "primereact/card";
-import { TimestampTable } from "./components/TimestampTable";
 
 ChartJS.register(
   LineElement,
@@ -95,13 +94,8 @@ export default function App() {
   );
 
   // used for graphing - same logic as EEGEdu
-  const { currentEpoch } = useEpochRecording(
-    client,
-    isConnected,
-    settings,
-    channelNames,
-    participantId
-  );
+  const { currentEpoch } = useEpochGraphData(client, isConnected, settings);
+  const { currentSpectra } = useSpectraGraphData(client, isConnected, settings);
 
   const {
     // timestampData,
@@ -109,14 +103,6 @@ export default function App() {
     setRecordingTimestamps,
     stopRecordingTimestamps,
   } = useTimestampRecording(
-    client,
-    isConnected,
-    settings,
-    channelNames,
-    participantId
-  );
-
-  const { currentSpectra } = useSpectraRecording(
     client,
     isConnected,
     settings,
