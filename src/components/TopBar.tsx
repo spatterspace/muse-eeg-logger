@@ -1,5 +1,6 @@
 import { Button } from "primereact/button";
 import { InputNumber } from "primereact/inputnumber";
+import { InputText } from "primereact/inputtext";
 
 interface TopBarProps {
   // Participant ID
@@ -33,16 +34,15 @@ export function TopBar({
   return (
     <div className="flex items-center gap-4 mb-4">
       <div className="flex items-center gap-2">
-        <label htmlFor="participantId" className="text-sm">
+        <label htmlFor="participantId" className="text-sm font-medium">
           Participant ID:
         </label>
-        <input
+        <InputText
           id="participantId"
-          type="text"
           value={participantId}
           onChange={(e) => setParticipantId(e.target.value)}
-          className="border rounded px-2 py-1"
           placeholder="Enter ID"
+          className="w-56"
         />
       </div>
       {!isConnected ? (

@@ -24,6 +24,7 @@ import { EEGChart } from "./components/EEGChart";
 import { SpectraChart } from "./components/SpectraChart";
 import { FFTSliders } from "./components/FFTSliders";
 import { Card } from "primereact/card";
+import { RingMetrics } from "./components/RingMetrics";
 
 ChartJS.register(
   LineElement,
@@ -323,6 +324,7 @@ export default function App() {
               </div>
             </div>
           </details>
+          <RingMetrics />
         </>
       </div>
     </div>
