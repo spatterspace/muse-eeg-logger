@@ -14,6 +14,10 @@
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "muse-js": ["./src/muse-js/muse.ts"]
+    },
 
     /* Linting */
     "strict": true,

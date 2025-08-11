@@ -9,7 +9,7 @@ export function useDeviceInfo(
 ) {
   const [deviceInfo, setDeviceInfo] = useState<MuseDeviceInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const intervalRef = useRef<number | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     // Clear any existing interval
