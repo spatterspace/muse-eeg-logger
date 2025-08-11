@@ -285,7 +285,7 @@ export default function App() {
         />
         <>
           <details
-            className="max-w-4xl mb-4"
+            className="mb-4"
             open={isEpochChartOpen}
             onToggle={(e) => setIsEpochChartOpen(e.currentTarget.open)}
           >
