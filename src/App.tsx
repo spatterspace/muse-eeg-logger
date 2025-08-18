@@ -23,8 +23,9 @@ import { Settings } from "./types";
 import { EEGChart } from "./components/EEGChart";
 import { SpectraChart } from "./components/SpectraChart";
 import { FFTSliders } from "./components/FFTSliders";
-import { Card } from "primereact/card";
 import { RingMetrics } from "./components/RingMetrics";
+import { Instructions } from "./components/Instructions";
+import { DeviceInfoCard } from "./components/DeviceInfoCard";
 
 ChartJS.register(
   LineElement,
@@ -125,132 +126,16 @@ export default function App() {
 
   return (
     <div className="p-4">
-      <details className="max-w-4xl mb-4">
-        <summary className="text-lg font-semibold cursor-pointer rounded-t-lg">
-          Instructions
-        </summary>
-        <div className="p-4">
-          <p className="mb-4">
-            This project has been tested on Chrome on Windows and Mac.
-          </p>
-          <ul className="space-y-2 mb-4">
-            <li>
-              <b>Change the download folder:</b> go to Chrome settings, then
-              Downloads, then hit Change and select the USB stick.
-            </li>
-            <li>
-              <b>Turn off Chrome's download popups:</b> go to Chrome settings,
-              search "Show downloads when they are done", and disable that.
-            </li>
-            <li>
-              <b>Unlock the record buttons:</b> enter the participant ID in the
-              box. If you don't have a participant in mind, enter anything. Then
-              press Connect and use the browser Bluetooth popup to connect to
-              the device.
-            </li>
-            <li>
-              <b>Force Chrome to allow multiple downloads:</b> set the download
-              interval to 2s and hit Record Timestamps. If Chrome prompts you to
-              allow downloading multiple files, click Allow.
-            </li>
-          </ul>
-          <p className="mb-2">
-            The sliders and the graphs are meant to help you test the device,
-            but they have no impact on the data recording.
-          </p>
-          <p className="mb-2">
-            When you're ready to start recording, enter a participant ID, press
-            Connect, and then enter a download interval of 180 seconds (or as
-            decided by the team). Then hit Record Timestamps.
-          </p>
-          <p>
-            At each interval, a CSV file will be automatically downloaded and
-            prefixed with the participant ID.
-          </p>
-        </div>
-      </details>
+      <Instructions />
 
-      {isConnected && (
-        <Card title="Device Information" className="max-w-4xl mb-4">
-          {(deviceLoading || telemetryLoading) && (
-            <p>Loading device information...</p>
-          )}
-          {deviceError && (
-            <p className="text-red-500">
-              Disconnected. Attempting to reconnect...
-            </p>
-          )}
-          {(deviceInfo || telemetryData) && (
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <h3 className="font-semibold mb-2">Device Details</h3>
-                <div className="space-y-1 text-sm">
-                  <div>
-                    <span className="font-medium">Hardware:</span>{" "}
-                    {deviceInfo?.hw}
-                  </div>
-                  <div>
-                    <span className="font-medium">Firmware:</span>{" "}
-                    {deviceInfo?.fw}
-                  </div>
-                  <div>
-                    <span className="font-medium">Build Number:</span>{" "}
-                    {deviceInfo?.bn}
-                  </div>
-                  <div>
-                    <span className="font-medium">Protocol Version:</span>{" "}
-                    {deviceInfo?.pv}
-                  </div>
-                </div>
-              </div>
-              <div>
-                <h3 className="font-semibold mb-2">Connection & Battery</h3>
-                <div className="space-y-1 text-sm">
-                  <div>
-                    <span className="font-medium">Access Point:</span>{" "}
-                    {deviceInfo?.ap}
-                  </div>
-                  <div>
-                    <span className="font-medium">Bluetooth:</span>{" "}
-                    {deviceInfo?.bl}
-                  </div>
-                  <div>
-                    <span className="font-medium">Serial Port:</span>{" "}
-                    {deviceInfo?.sp}
-                  </div>
-                  <div>
-                    <span className="font-medium">Type:</span> {deviceInfo?.tp}
-                  </div>
-                  <div>
-                    <span className="font-medium">Battery Level:</span>{" "}
-                    {telemetryData?.batteryLevel != null
-                      ? `${telemetryData.batteryLevel}%`
-                      : "-"}
-                  </div>
-                  <div>
-                    <span className="font-medium">Voltage:</span>{" "}
-                    {telemetryData?.fuelGaugeVoltage != null
-                      ? `${telemetryData.fuelGaugeVoltage} V`
-                      : "-"}
-                  </div>
-                  <div>
-                    <span className="font-medium">Temperature:</span>{" "}
-                    {telemetryData?.temperature != null
-                      ? `${telemetryData.temperature} °C`
-                      : "-"}
-                  </div>
-                  <div>
-                    <span className="font-medium">Sequence ID:</span>{" "}
-                    {telemetryData?.sequenceId != null
-                      ? `${telemetryData.sequenceId}`
-                      : "-"}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </Card>
-      )}
+      <DeviceInfoCard
+        isConnected={isConnected}
+        deviceInfo={deviceInfo}
+        deviceError={deviceError}
+        deviceLoading={deviceLoading}
+        telemetryData={telemetryData}
+        telemetryLoading={telemetryLoading}
+      />
 
       <div>
         <TopBar
