@@ -38,17 +38,17 @@ export function TopBar({
   onToggleDisconnectSound,
 }: TopBarProps) {
   return (
-    <div className="flex items-center gap-4 mb-4">
-      <div className="flex items-center gap-2">
-        <label htmlFor="participantId" className="text-sm font-medium">
-          Participant ID:
+    <div className="flex items-end gap-4 mb-4">
+      <div className="flex flex-col">
+        <label htmlFor="participantId" className="text-sm font-medium mb-1">
+          Participant ID
         </label>
         <InputText
           id="participantId"
           value={participantId}
           onChange={(e) => setParticipantId(e.target.value)}
           placeholder="Enter ID"
-          className="w-56"
+          className="w-56 p-inputtext-sm"
         />
       </div>
       {!isConnected ? (
@@ -87,9 +87,9 @@ export function TopBar({
         severity={recordingTimestamps ? "danger" : "success"}
       />
 
-      <div className="flex items-center gap-2">
-        <label htmlFor="downloadInterval" className="text-sm">
-          Download Interval (seconds):
+      <div className="flex flex-col items-center">
+        <label htmlFor="downloadInterval" className="text-sm font-medium mb-1">
+          Download Interval
         </label>
         <InputNumber
           id="downloadInterval"
@@ -97,13 +97,14 @@ export function TopBar({
           onValueChange={(e) => onDownloadIntervalChange(e.value ?? 1)}
           min={1}
           disabled={!!recordingTimestamps}
-          className="w-20"
-          size={5}
+          className="p-inputtext-sm"
+          size={4}
+          suffix="s"
           useGrouping={false}
         />
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 mb-3">
         <Checkbox
           inputId="disconnectSound"
           checked={disconnectSoundEnabled}
