@@ -1,6 +1,6 @@
 import {
   BehaviorSubject,
-  fromEvent,
+  fromEventPattern,
   Observable,
   Subject,
   Subscription,
@@ -133,7 +133,18 @@ export class MuseClient {
     this.deviceName = this.gatt.device.name || null;
 
     const service = await this.gatt.getPrimaryService(MUSE_SERVICE);
-    fromEvent(this.gatt.device, "gattserverdisconnected")
+    fromEventPattern<Event>(
+      (handler) =>
+        this.gatt!.device.addEventListener(
+          "gattserverdisconnected",
+          handler as EventListener
+        ),
+      (handler) =>
+        this.gatt!.device.removeEventListener(
+          "gattserverdisconnected",
+          handler as EventListener
+        )
+    )
       .pipe(first())
       .subscribe(() => {
         this.handleDisconnected();
