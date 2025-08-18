@@ -1,6 +1,7 @@
 import { Button } from "primereact/button";
 import { InputNumber } from "primereact/inputnumber";
 import { InputText } from "primereact/inputtext";
+import { Checkbox } from "primereact/checkbox";
 
 interface TopBarProps {
   // Participant ID
@@ -17,6 +18,9 @@ interface TopBarProps {
   // Download interval
   downloadInterval: number;
   onDownloadIntervalChange: (value: number) => void;
+  // Audio toggle
+  disconnectSoundEnabled: boolean;
+  onToggleDisconnectSound: (enabled: boolean) => void;
 }
 
 export function TopBar({
@@ -30,6 +34,8 @@ export function TopBar({
   onStopRecordingTimestamps,
   downloadInterval,
   onDownloadIntervalChange,
+  disconnectSoundEnabled,
+  onToggleDisconnectSound,
 }: TopBarProps) {
   return (
     <div className="flex items-center gap-4 mb-4">
@@ -95,6 +101,17 @@ export function TopBar({
           size={5}
           useGrouping={false}
         />
+      </div>
+
+      <div className="flex items-center gap-2">
+        <Checkbox
+          inputId="disconnectSound"
+          checked={disconnectSoundEnabled}
+          onChange={(e) => onToggleDisconnectSound(!!e.checked)}
+        />
+        <label htmlFor="disconnectSound" className="text-sm">
+          Disconnect sound
+        </label>
       </div>
     </div>
   );

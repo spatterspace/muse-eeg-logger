@@ -2,7 +2,8 @@ import { useEffect, useRef } from "react";
 
 export function useAudioAlert(
   error: string | null,
-  audioPath: string = "/chime.mp3"
+  audioPath: string = "/chime.mp3",
+  enabled: boolean = true
 ) {
   const prevErrorRef = useRef<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -15,11 +16,11 @@ export function useAudioAlert(
 
   // Play sound when error state changes from null to an error
   useEffect(() => {
-    if (error && !prevErrorRef.current) {
+    if (enabled && error && !prevErrorRef.current) {
       if (audioRef.current) {
         audioRef.current.play().catch(console.error);
       }
     }
     prevErrorRef.current = error;
-  }, [error]);
+  }, [error, enabled]);
 }

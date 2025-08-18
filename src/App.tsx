@@ -75,6 +75,7 @@ export default function App() {
   const [participantId, setParticipantId] = useState("");
   const [isEpochChartOpen, setIsEpochChartOpen] = useState(true);
   const [isSpectraChartOpen, setIsSpectraChartOpen] = useState(false);
+  const [disconnectSoundEnabled, setDisconnectSoundEnabled] = useState(true);
 
   const client = useRef(createMuseClient());
 
@@ -86,7 +87,7 @@ export default function App() {
   } = useDeviceInfo(client, isConnected);
 
   // Audio feedback for device errors
-  useAudioAlert(deviceError);
+  useAudioAlert(deviceError, "/chime.mp3", disconnectSoundEnabled);
 
   // telemeteryData includes battery level, voltage, and temperature
   const { telemetryData, isLoading: telemetryLoading } = useTelemetry(
@@ -273,6 +274,9 @@ export default function App() {
           onDownloadIntervalChange={(value: number) =>
             setSettings((prev) => ({ ...prev, downloadInterval: value }))
           }
+          // Disconnect sound toggle
+          disconnectSoundEnabled={disconnectSoundEnabled}
+          onToggleDisconnectSound={setDisconnectSoundEnabled}
         />
         <>
           <details
