@@ -174,7 +174,11 @@ export default function App() {
           {(deviceLoading || telemetryLoading) && (
             <p>Loading device information...</p>
           )}
-          {deviceError && <p className="text-red-500">Error: {deviceError}</p>}
+          {deviceError && (
+            <p className="text-red-500">
+              Disconnected. Attempting to reconnect...
+            </p>
+          )}
           {(deviceInfo || telemetryData) && (
             <div className="grid grid-cols-2 gap-4">
               <div>
