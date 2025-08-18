@@ -7,6 +7,8 @@ import { Message } from "primereact/message";
 import {
   downloadRingData,
   UltrahumanMetricsApiResponse,
+  UltrahumanTimeSeriesValue,
+  UltrahumanMetricObject,
 } from "../downloadRingData";
 
 function formatDateYYYYMMDD(date: Date): string {
@@ -49,26 +51,26 @@ export function RingMetrics() {
     }
   }, [email, date, authorization]);
 
-  const { labels, valuesHR, valuesHRV, hasData } = useMemo(() => {
+  const { labels, valuesHR, valuesHRV } = useMemo(() => {
     const empty = {
       labels: [] as string[],
       valuesHR: [] as (number | null)[],
       valuesHRV: [] as (number | null)[],
-      hasData: false,
     };
     if (!response) return empty;
 
-    const hrItem = response.data.metric_data.find((m) => m.type === "hr");
-    const hrvItem = response.data.metric_data.find((m) => m.type === "hrv");
+    function extractValues(type: "hr" | "hrv"): UltrahumanTimeSeriesValue[] {
+      const item = response?.data?.metric_data?.find((m) => m.type === type);
+      const values = (item?.object as UltrahumanMetricObject | undefined)
+        ?.values;
+      return (values ?? []).filter(
+        (v): v is UltrahumanTimeSeriesValue =>
+          v != null && typeof v.timestamp === "number" && v.value != null
+      );
+    }
 
-    const hrValues =
-      hrItem && "values" in hrItem.object && hrItem.object.values
-        ? hrItem.object.values.filter((v) => v.value != null)
-        : [];
-    const hrvValues =
-      hrvItem && "values" in hrvItem.object && hrvItem.object.values
-        ? hrvItem.object.values.filter((v) => v.value != null)
-        : [];
+    const hrValues = extractValues("hr");
+    const hrvValues = extractValues("hrv");
 
     if (hrValues.length === 0 && hrvValues.length === 0) return empty;
 
@@ -87,7 +89,7 @@ export function RingMetrics() {
     const valuesHR = allTimestamps.map((t) => hrMap.get(t) ?? null);
     const valuesHRV = allTimestamps.map((t) => hrvMap.get(t) ?? null);
 
-    return { labels, valuesHR, valuesHRV, hasData: true };
+    return { labels, valuesHR, valuesHRV };
   }, [response]);
 
   const data = useMemo(
@@ -196,13 +198,7 @@ export function RingMetrics() {
         {error && <Message severity="error" text={error} />}
 
         <div className="w-full h-96 max-w-4xl">
-          {hasData ? (
-            <Line data={data} options={options} />
-          ) : (
-            <div className="text-sm text-gray-600">
-              No HR data yet. Enter credentials above and click Load.
-            </div>
-          )}
+          <Line data={data} options={options} />
         </div>
       </div>
     </details>
