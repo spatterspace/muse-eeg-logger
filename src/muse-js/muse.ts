@@ -1,4 +1,10 @@
-import { BehaviorSubject, fromEvent, merge, Observable, Subject } from "rxjs";
+import {
+  BehaviorSubject,
+  fromEvent,
+  Observable,
+  Subject,
+  Subscription,
+} from "rxjs";
 import { filter, first, map, share, take } from "rxjs/operators";
 
 import {
@@ -83,6 +89,18 @@ export class MuseClient {
   eventMarkers!: Subject<EventMarker>;
 
   private gatt: BluetoothRemoteGATTServer | null = null;
+  private device: BluetoothDevice | null = null;
+  private shouldReconnect = true;
+  private reconnecting = false;
+  private characteristicSubscriptions: Subscription[] = [];
+  private wasStarted = false;
+
+  // Subjects keep observable references stable across reconnects
+  private telemetrySubject = new Subject<TelemetryData>();
+  private gyroscopeSubject = new Subject<GyroscopeData>();
+  private accelerometerSubject = new Subject<AccelerometerData>();
+  private eegSubject = new Subject<EEGReading>();
+  private ppgSubject = new Subject<PPGReading>();
   private controlChar!: BluetoothRemoteGATTCharacteristic;
   private eegCharacteristics!: BluetoothRemoteGATTCharacteristic[];
   private ppgCharacteristics!: BluetoothRemoteGATTCharacteristic[];
@@ -90,13 +108,26 @@ export class MuseClient {
   private lastIndex: number | null = null;
   private lastTimestamp: number | null = null;
 
+  constructor() {
+    // Expose stable observable references
+    this.telemetryData = this.telemetrySubject.asObservable();
+    this.gyroscopeData = this.gyroscopeSubject.asObservable();
+    this.accelerometerData = this.accelerometerSubject.asObservable();
+    this.eegReadings = this.eegSubject.asObservable();
+    this.ppgReadings = this.ppgSubject.asObservable();
+    this.eventMarkers = new Subject<EventMarker>();
+  }
+
   async connect(gatt?: BluetoothRemoteGATTServer) {
+    this.shouldReconnect = true;
     if (gatt) {
       this.gatt = gatt;
+      this.device = gatt.device;
     } else {
       const device = await navigator.bluetooth.requestDevice({
         filters: [{ services: [MUSE_SERVICE] }],
       });
+      this.device = device;
       this.gatt = await device.gatt!.connect();
     }
     this.deviceName = this.gatt.device.name || null;
@@ -105,8 +136,7 @@ export class MuseClient {
     fromEvent(this.gatt.device, "gattserverdisconnected")
       .pipe(first())
       .subscribe(() => {
-        this.gatt = null;
-        this.connectionStatus.next(false);
+        this.handleDisconnected();
       });
 
     // Control
@@ -123,32 +153,37 @@ export class MuseClient {
     const telemetryCharacteristic = await service.getCharacteristic(
       TELEMETRY_CHARACTERISTIC
     );
-    this.telemetryData = (
-      await observableCharacteristic(telemetryCharacteristic)
-    ).pipe(map(parseTelemetry));
+    this.characteristicSubscriptions.push(
+      (await observableCharacteristic(telemetryCharacteristic))
+        .pipe(map(parseTelemetry))
+        .subscribe((data) => this.telemetrySubject.next(data))
+    );
 
     // Gyroscope
     const gyroscopeCharacteristic = await service.getCharacteristic(
       GYROSCOPE_CHARACTERISTIC
     );
-    this.gyroscopeData = (
-      await observableCharacteristic(gyroscopeCharacteristic)
-    ).pipe(map(parseGyroscope));
+    this.characteristicSubscriptions.push(
+      (await observableCharacteristic(gyroscopeCharacteristic))
+        .pipe(map(parseGyroscope))
+        .subscribe((data) => this.gyroscopeSubject.next(data))
+    );
 
     // Accelerometer
     const accelerometerCharacteristic = await service.getCharacteristic(
       ACCELEROMETER_CHARACTERISTIC
     );
-    this.accelerometerData = (
-      await observableCharacteristic(accelerometerCharacteristic)
-    ).pipe(map(parseAccelerometer));
+    this.characteristicSubscriptions.push(
+      (await observableCharacteristic(accelerometerCharacteristic))
+        .pipe(map(parseAccelerometer))
+        .subscribe((data) => this.accelerometerSubject.next(data))
+    );
 
-    this.eventMarkers = new Subject();
+    // Keep existing eventMarkers subject instance stable across reconnects
 
     // PPG
     if (this.enablePpg) {
       this.ppgCharacteristics = [];
-      const ppgObservables = [];
       const ppgChannelCount = PPG_CHARACTERISTICS.length;
       for (
         let ppgChannelIndex = 0;
@@ -157,28 +192,29 @@ export class MuseClient {
       ) {
         const characteristicId = PPG_CHARACTERISTICS[ppgChannelIndex];
         const ppgChar = await service.getCharacteristic(characteristicId);
-        ppgObservables.push(
-          (await observableCharacteristic(ppgChar)).pipe(
-            map((data) => {
-              const eventIndex = data.getUint16(0);
-              return {
-                index: eventIndex,
-                ppgChannel: ppgChannelIndex,
-                samples: decodePPGSamples(
-                  new Uint8Array(data.buffer).subarray(2)
-                ),
-                timestamp: this.getTimestamp(
-                  eventIndex,
-                  PPG_SAMPLES_PER_READING,
-                  PPG_FREQUENCY
-                ),
-              };
-            })
-          )
+        this.characteristicSubscriptions.push(
+          (await observableCharacteristic(ppgChar))
+            .pipe(
+              map((data) => {
+                const eventIndex = data.getUint16(0);
+                return {
+                  index: eventIndex,
+                  ppgChannel: ppgChannelIndex,
+                  samples: decodePPGSamples(
+                    new Uint8Array(data.buffer).subarray(2)
+                  ),
+                  timestamp: this.getTimestamp(
+                    eventIndex,
+                    PPG_SAMPLES_PER_READING,
+                    PPG_FREQUENCY
+                  ),
+                };
+              })
+            )
+            .subscribe((reading) => this.ppgSubject.next(reading))
         );
         this.ppgCharacteristics.push(ppgChar);
       }
-      this.ppgReadings = merge(...ppgObservables);
     }
 
     // EEG
@@ -214,47 +250,34 @@ export class MuseClient {
      * where frequency is 256hz. This gives us 3.90625ms between each sample timestamp.
      */
     this.eegCharacteristics = [];
-    const eegObservables = [] as Observable<EEGReading>[];
     const channelCount = this.enableAux ? EEG_CHARACTERISTICS.length : 4;
     for (let channelIndex = 0; channelIndex < channelCount; channelIndex++) {
       const characteristicId = EEG_CHARACTERISTICS[channelIndex];
       const eegChar = await service.getCharacteristic(characteristicId);
-      eegObservables.push(
-        (await observableCharacteristic(eegChar)).pipe(
-          map((data) => {
-            const eventIndex = data.getUint16(0);
-            const timestamp = this.getTimestamp(
-              eventIndex,
-              EEG_SAMPLES_PER_READING,
-              EEG_FREQUENCY
-            );
-            // console.log(eventIndex, timestamp, channelIndex);
-            // console.log(timestamp, timestamp - (lastTimestamp || timestamp));
-            // if (lastTimestamp && lastTimestamp != timestamp && timestamp - lastTimestamp != 46.875) {
-            //     console.log('jump', timestamp, lastTimestamp, timestamp - lastTimestamp);
-            // }
-            return {
-              electrode: channelIndex,
-              index: eventIndex,
-              samples: decodeEEGSamples(
-                new Uint8Array(data.buffer).subarray(2)
-              ),
-              timestamp,
-            };
-          })
-        )
+      this.characteristicSubscriptions.push(
+        (await observableCharacteristic(eegChar))
+          .pipe(
+            map((data) => {
+              const eventIndex = data.getUint16(0);
+              const timestamp = this.getTimestamp(
+                eventIndex,
+                EEG_SAMPLES_PER_READING,
+                EEG_FREQUENCY
+              );
+              return {
+                electrode: channelIndex,
+                index: eventIndex,
+                samples: decodeEEGSamples(
+                  new Uint8Array(data.buffer).subarray(2)
+                ),
+                timestamp,
+              } as EEGReading;
+            })
+          )
+          .subscribe((reading) => this.eegSubject.next(reading))
       );
       this.eegCharacteristics.push(eegChar);
     }
-    // eegObservables.forEach((observable) => {
-    //     observable.subscribe((reading) => {
-    //         console.log(reading);
-    //     });
-    // });
-    this.eegReadings = merge(...eegObservables);
-    // this.eegReadings.subscribe((reading) => {
-    //     console.log(reading);
-    // });
     this.connectionStatus.next(true);
   }
 
@@ -263,6 +286,7 @@ export class MuseClient {
   }
 
   async start() {
+    this.wasStarted = true;
     await this.pause();
     let preset = "p21";
     if (this.enablePpg) {
@@ -303,9 +327,10 @@ export class MuseClient {
   }
 
   disconnect() {
+    this.shouldReconnect = false;
+    this.wasStarted = false;
     if (this.gatt) {
-      this.lastIndex = null;
-      this.lastTimestamp = null;
+      this.cleanupOnDisconnect();
       this.gatt.disconnect();
       this.connectionStatus.next(false);
     }
@@ -355,6 +380,84 @@ export class MuseClient {
       // The indices are out of order - we're getting an index that is less than
       // the previous one. Subtract READING_DELTA from the last timestamp, but don't update it.
       return this.lastTimestamp - READING_DELTA * (this.lastIndex - eventIndex);
+    }
+  }
+
+  private handleDisconnected() {
+    this.cleanupOnDisconnect();
+    this.gatt = null;
+    this.connectionStatus.next(false);
+
+    if (!this.shouldReconnect || !this.device || this.reconnecting) {
+      return;
+    }
+    this.reconnecting = true;
+    this.exponentialBackoff(
+      Infinity,
+      1,
+      async () => {
+        if (!this.device) throw new Error("No device");
+        const gatt = this.device.gatt;
+        if (!gatt) throw new Error("No GATT available");
+        await gatt.connect();
+        return gatt;
+      },
+      async (gatt) => {
+        this.reconnecting = false;
+        await this.connect(gatt);
+        if (this.wasStarted) {
+          try {
+            await this.start();
+          } catch {
+            // Ignore auto-start failure on reconnect
+          }
+        }
+      },
+      () => {
+        this.reconnecting = false;
+      }
+    );
+  }
+
+  private cleanupOnDisconnect() {
+    // Reset timestamping so we start fresh on next connect
+    this.lastIndex = null;
+    this.lastTimestamp = null;
+    // Unsubscribe all characteristic subscriptions
+    this.characteristicSubscriptions.forEach((s) => s.unsubscribe());
+    this.characteristicSubscriptions = [];
+  }
+
+  private async exponentialBackoff<T>(
+    maxRetries: number,
+    delaySeconds: number,
+    toTry: () => Promise<T>,
+    onSuccess: (result: T) => void | Promise<void>,
+    onFail: () => void
+  ) {
+    if (!this.shouldReconnect) {
+      return;
+    }
+    try {
+      const result = await toTry();
+      await onSuccess(result);
+    } catch {
+      if (maxRetries === 0) {
+        onFail();
+        return;
+      }
+      setTimeout(() => {
+        if (!this.shouldReconnect) {
+          return;
+        }
+        this.exponentialBackoff(
+          maxRetries - 1,
+          delaySeconds * 2,
+          toTry,
+          onSuccess,
+          onFail
+        );
+      }, delaySeconds * 1000);
     }
   }
 }
