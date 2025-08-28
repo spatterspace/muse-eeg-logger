@@ -190,8 +190,6 @@ export class MuseClient {
         .subscribe((data) => this.accelerometerSubject.next(data))
     );
 
-    // Keep existing eventMarkers subject instance stable across reconnects
-
     // PPG
     if (this.enablePpg) {
       this.ppgCharacteristics = [];
